@@ -10,6 +10,6 @@ Data preprocessing module
 | The list of functions included in this module is as follows:
 
 .. toctree::
-    impute
+   impute
    :maxdepth: 3
    
