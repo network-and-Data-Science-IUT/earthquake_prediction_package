@@ -36,16 +36,9 @@ Dr. Pouria Ramazi
    :caption: Getting started
 
 .. toctree::
-   preprocess
-   predict
-   stpredict
+   Data downloading
+   Data preprocessing
+   Prediction
    :hidden:
    :maxdepth: 3
    :caption: The API
-
-.. toctree::
-   data_structure
-   user-defined-model
-   :hidden:
-   :maxdepth: 2
-   :caption: Base structures
