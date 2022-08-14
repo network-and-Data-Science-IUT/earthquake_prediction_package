@@ -31,9 +31,9 @@ Dr. Pouria Ramazi
    :caption: Getting started
 
 .. toctree::
-   Data downloading
-   Data preprocessing
-   Prediction
+   data_downloading
+   data_preprocessing
+   prediction
    :hidden:
    :maxdepth: 3
    :caption: The API
