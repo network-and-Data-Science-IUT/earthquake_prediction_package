@@ -18,9 +18,9 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Project information -----------------------------------------------------
 
-project = 'stpredict'
-copyright = '2021, cndalab'
-author = 'cndalab'
+project = 'EarthquakePredictionPackage'
+copyright = ''
+author = ''
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'
