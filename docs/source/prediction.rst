@@ -10,5 +10,6 @@ Prediction module
 | The list of functions included in this module is as follows:
 
 .. toctree::
+   split_data
    :maxdepth: 3
    
