@@ -12,5 +12,6 @@ Data preprocessing module
 .. toctree::
    impute
    set_spatial_id
+   set_temporal_id
    :maxdepth: 3
    

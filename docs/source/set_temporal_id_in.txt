@@ -1,0 +1,51 @@
+#,Input Name,Input Description
+"| 1
+| ","| data 
+| ","| **type:** data frame or str
+| **default:** -
+| **details:**
+| a data frame or address of a data frame.
+| The data includes the following column:
+| temporal ID:
+| The type of this column is one of below types:
+| 1. datetime object
+| 2. string(“yy/mm/dd hh:mm:ss”)
+| 3. Integer of float (seconds)
+| NOTE: if the time column name is not 'temporal ID', 
+| it should be spedified in 'column identifier'."
+"| 2
+| ","| column_identifier
+| ","| **type:** dict or None
+| **default:** None
+| **details:**
+| If the input data column names do not match the specific format 
+| we expect, a dictionary must be passed to specify the content 
+| of each column.
+| in this function we only need 'temporal ID' column to be specified. 
+| **example:** {'temporal ID':'Time'}"
+"| 3
+| ","| temporal_scale
+| ","| **type:** str, int, or float
+| **default:** -
+| **options:**
+| string type:
+| [“minute”,”hour”,“day”,”week”,”month”,”year”,”no_scaling”].
+| int or float type: seconds.
+| **details:**
+| Time column must be one of the following types:
+| 1. datetime object
+| 2. string(“yy/mm/dd hh:mm:ss”)
+| 3. Integer of float (seconds)
+| If the option “no_scaling” was chosen, we sort the “temporal ID” column
+| (specified in “column_identifier”) and set a corresponding temporal ID
+| to each of them.
+"
+"| 4
+| ","| verbose
+| ","| **type:** int
+| **default:** 0
+| **details:** The level of details in produced logging information
+| available options:
+| 0: no logging
+| 1: only important information logging
+| 2: all details logging"
