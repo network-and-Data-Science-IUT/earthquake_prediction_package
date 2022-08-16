@@ -1,0 +1,7 @@
+#,Output Name,Output Description
+"| 1
+| ","| spatial_scaled_dataframe
+| ","| **type:** DataFrame
+| **details:**
+| A dataframe with a new column “spatial_id” that
+| shows an event belongs to which geographical subregion."
