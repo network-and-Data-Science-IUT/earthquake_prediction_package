@@ -17,11 +17,11 @@ based on the longitude, latitude, and depth.
 .. csv-table::
    :header-rows: 1
    :widths: 1 , 3, 15
-   :file: set_spatial_id_in.csv
+   :file: set_spatial_id_in.txt
 
 **Returns**
 
 .. csv-table::
    :header-rows: 1
    :widths: 1 , 3, 15
-   :file: set_spatial_id_out.csv
+   :file: set_spatial_id_out.txt
