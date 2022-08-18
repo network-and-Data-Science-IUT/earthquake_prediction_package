@@ -13,5 +13,6 @@ Data preprocessing module
    impute
    set_spatial_id
    set_temporal_id
+   aggregate
    :maxdepth: 3
    

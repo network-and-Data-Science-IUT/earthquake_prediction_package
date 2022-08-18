@@ -1,0 +1,88 @@
+#,Input Name,Input Description
+"| 1
+| ","| data
+| ","| **type:** DataFrame or string
+| **default:** -
+| **details:** A DataFrame or a string as the address of a CSV file.
+| The *data* must include the following column with the names in
+| the specified format in the description, or if the column have
+| arbitrary names, their content must be specified using the 
+| *column_identifier* arguments.
+| 
+| Spatial ids:The id of the units in the finest spatial scale of input 
+| data must be included in the temporal_data in a column with the name
+| ‘spatial id level 1’.
+|
+| Temporal ids: The id of time units recorded in the input data for each
+| temporal scale must be included as a separate column in the 
+| temporal_data with the name in a format ‘temporal id level x’, where ‘x’
+| is the related temporal scale level beginning with level 1 for the
+| smallest scale. The temporal units could have a free but sortable
+| format like year number, week number and so on. The combination of
+| these temporal scale levels' ids should form a unique identifier.
+| However, the integrated foramt of data and time is also supported. In
+| the case of using integrated format, only the smallest temporal scale
+| must be included in the temporal_data with the column name of 
+| ‘temporal id’. The expected format of each scale is shown in Table 2."
+"| 2
+| ","| column_identifier
+| ","| **type:** dict or None
+| **default:** None
+| **details:** If the input data column names, don’t match
+| the specified format we expect,
+| (i.e, “longitude”, “latitude”, “depth”, “temporal ID”, “magnitude”)
+| a dictionary must be passed to specify the content of each column.
+| In this case, user has to clarify the columns containing temporal and
+| spatial IDs and pass other columns which contain other covariates,
+| as lists of “temporal covariates” and “spatial covariates”.
+| The user must specify whether the longitude & latitude or 
+| spatial ID column.
+| The user must specify temporal ID column.
+| Specifying depth and magnitude is optional and is only necessary if user
+| wants to do 3D pixelating or extract some specified features.
+| **examples:**
+| 1.
+| {“temporal ID”: “time”
+| “spatial ID”: “city”,
+| “temporal covariates”: [“temperature”,”magnitude”] ,
+| “spatial covariates”: [“area”, “population”] ,
+| “target”: “magnitude”}
+| 2.
+| {“temporal ID level 1”: “day” ,
+| “temporal ID level 2” : “month”,
+| “temporal ID level 3” : “year”
+| “latitude”: “lat”,   “longitude”: “lon”,
+| “temporal covariates”: [“temperature”,”magnitude”] ,
+| “spatial covariates”: [“area”, “population”] ,
+| “target”: “magnitude”}"
+"| 3
+| ","| aggregation_mode
+| ","| **type:** dict or string
+| **default:** ‘mean’
+| **details:** The need for aggregation is because tow or more events may
+| occure in the same timascale interval and sptial interval and could not
+| be specified with identifiers.
+| it's possible to choose different aggregation modes for different 
+| covariates, using a dictionary in the format below or choose 
+| the same method for all the covariates using a string 
+| with the name of the method.
+| Format of dictionary:
+| { a temporal covariate (‘string’): aggregation method (‘str’)}
+| Options = [‘mean’, ‘max’, ‘min’, ‘std’, ‘sum’, ‘base_max’]
+| ‘base_max’: This option is only available in the case of dictionary.
+| If it is choosen for a covariate, the maximum value
+| of that covariate will be selected and in the case that other covariates 
+| has no aggregation_mode in the dictionary, the
+| value of other covariates in the same row will be selected.
+| **examples:**
+| 1. {‘target’:‘max’, ‘depth’:‘sum’, ‘magnitude’:‘base_max’}
+| 2. ‘max’"
+"| 4
+| ","| verbose
+| ","| **type:** int
+| **default:** 0
+| **details:** The level of details in produced logging information
+| available options:
+| 0: no logging
+| 1: only important information logging
+| 2: all details logging"
