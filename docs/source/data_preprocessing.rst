@@ -14,5 +14,6 @@ Data preprocessing module
    set_spatial_id
    set_temporal_id
    aggregate
+   extract_feature
    :maxdepth: 3
    

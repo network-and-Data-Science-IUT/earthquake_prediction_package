@@ -1,0 +1,72 @@
+#,Input Name,Input Description
+"| 1
+| ","| data
+| ","| **type:** DataFrame or string
+| **default:** -
+| **details:** a data frame or address of a data frame.
+| the dataframe must contain the following columns:
+| ”spatial ID“, ”temporal ID“
+| If density is selected in the feature list, the dataframe 
+| must also include the following columns:
+| “longitude“, “latitude“
+| In the case of selecting other features (except density),
+| the dataframe must also include the following column:
+| “magnitude“
+| The column names should be specified in column_identifier 
+| dictionary if they differ from those above.
+"
+"| 2
+| ","| column_identifier
+| ","| **type:** dict or None
+| **default:** None
+| **details:** In cases where column names differ from those 
+| in data input details(link to data input description), a dictionary
+| must be passed to specify the content of each column.
+| **examples:**
+| 1.
+| {“temporal ID”: “time”,
+| “spatial ID”: “city”,
+| “magnitude”: “mag”}
+| 2.
+| {“temporal ID”: “time”,
+| “spatial ID”: “city”,
+| “magnitude”: “mag”,
+| “latitude“: “lat“,
+| “longitude“: “lon“ }
+"
+"| 3
+| ","| feature_list
+| ","| **type:** list<str> or None
+| **default:** None
+| **options:** [“density”,”event frequency”,”time elapsed x”,
+|              “mean magnitude n”, “total energy”,”rate of energy”,
+|              “b value”, “eta value”,”delta magnitude”,
+|              ”sigma value x”,“c value”]
+
+| **details:** 
+| Description of features:
+| density: the number of earthquakes divided by the area 
+| where they occurred.
+| event frequency: the number of earthquake events within 
+| a specified spatial and temporal ID.
+| time elapsed x: the time elapsed since the previous 
+| earthquake event with magnitude greater than 'x'.
+| mean magnitude n: over the last 'n' events, the average of 
+| magnitude is calculated.
+| total energy: the total energy released by the earthquake events
+| within a specified temporal and spatial ID.
+| rate of energy: rate of square root of seismic energy(link)
+| b value: the b value in gutenberg richter law(link to wikipedia for b value).
+| eta value: summation of the mean square deviation from the regression line
+| based on the Gutenberg Richter inverse power law(link).
+| delta magnitude: the diffrence between the magnitude of the event
+| and the expected magnitude based on gutenberg richter law(link).
+| (link to wikipedia for gutenberg richter law).
+| sigma value x: the average time between main events 
+| (magnitude greater than x).
+| c value x: standard deviation of times between
+| main events(magnitude greater than x).
+| time elapsed x, c value x, sigma value x, delta magnitude, b value,
+| and eta value are inspired by the paper below:
+| (link to the paper)
+"
