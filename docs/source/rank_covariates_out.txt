@@ -1,0 +1,7 @@
+#,Output Name,Output Description
+"| 1
+| ","| ordered_covariates
+| ","| **type:**  list<string>
+| **details:** 
+| a list of ordered covariates (non-ascending based on 
+| the importance of covariates) using a selected ranking method."

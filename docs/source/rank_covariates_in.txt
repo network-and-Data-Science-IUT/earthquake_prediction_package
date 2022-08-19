@@ -1,0 +1,37 @@
+#,Input Name,Input Description
+"| 1
+| ","| data
+| ","| **type:** DataFrame or string
+| **default:** -
+| **details:** 
+| the dataframe after preprocessing."
+"| 2
+| ","| ranking_method
+| ","| **type:** {‘mRMR’, ‘correlation’, ‘variance’}
+| **default:** ‘mRMR’
+| **details:**
+| ‘correlation’: covariates are ranked based on their correlation with
+| target variable.
+| ‘mRMR’: the ranking will be conducted based on mRMR method in which
+| the correlation between the features themselves also affects the 
+| choice of rank.
+| ‘variance’: the variance-based sensitivity analysis method will be
+| used in which covariates are prioritized based on the fraction of 
+| target variable variance that can be attributed to their variance."
+"| 3
+| ","| forced_covariates
+| ","| **type:** list<string>
+| **default:** []
+| **details:** 
+| a list of covariates which are placed in the feature sets
+| by force with their historical values.
+| **example:** ['magnitude','depth']"
+"| 4
+| ","| verbose
+| ","| **type:** int
+| **default:** 0
+| **details:** 
+| the level of produced detailed logging information.
+| 0: no logging.
+| 1: only important information logging. 
+| 2: all details logging."
