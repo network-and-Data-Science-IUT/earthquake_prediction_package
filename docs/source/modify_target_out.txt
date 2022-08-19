@@ -1,0 +1,6 @@
+#,Output Name,Output Description
+"| 1
+| ","| target_modified_dataframe
+| ","| **type:** DataFrame
+| **details:** The input data frame with the target variable
+| values in user_specified target mode."

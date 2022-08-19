@@ -1,0 +1,84 @@
+#,Input Name,Input Description
+"| 1
+| ","| data
+| ","| **type:** DataFrame or string
+| **default:** -
+| **details:** A DataFrame or a string as the address of a CSV file.
+| The *data* must include the following column with the names with
+| the specified format in the description, or if the column have
+| arbitrary names, their content must be specified using the 
+| *column_identifier* arguments.
+| 
+| Spatial ids:The id of the units in the finest spatial scale of input 
+| data must be included in the *data* in a column with the name
+| ‘spatial id level 1’.
+|
+| Temporal ids: The id of time units recorded in the input data for each
+| temporal scale must be included as a separate column in the 
+| temporal_data with the name in a format ‘temporal id level x’, where ‘x’
+| is the related temporal scale level beginning with level 1 for the
+| smallest scale. The temporal units could have a free but sortable
+| format like year number, week number and so on. The combination of
+| these temporal scale levels' ids should form a unique identifier.
+| However, the integrated foramt of data and time is also supported. In
+| the case of using integrated format, only the smallest temporal scale
+| must be included in the temporal_data with the column name of 
+| ‘temporal id’. The expected format of each scale is shown in Table 2.
+| **examples:** ‘USGS earthquake temporal data.csv’"
+"| 2
+| ","| target_mode
+| ","| **type:** {‘none’, ‘cumulative’, ‘differential’, 
+| ‘moving average x’, ‘classify’}
+| **default:** ‘none’
+| **details:** The mode of target variable, which is of great importance in 
+| prediction module and may cause diffrent appearance in the model. 
+| ‘none’: No modification. 
+| ‘cumulative’: The target variable shows the cumulative value of all
+| the targets from the first temporal unit in the data.
+| ‘differential’: The target variable shows the diffrence between the
+| value in current and  previous temporal unit. 
+| ‘moving average x’: The target variable shows the average of
+| the window of x temporal units which it is located in.
+| ‘classify’: This option classifies the target into some classes.
+| if the ‘target_mode’ is set to ‘classify’, ‘class_boundaries’ should
+| also be set.
+"
+"| 3
+| ","| class_boundaries
+| ","| **type:** list<float>
+| **default:** -
+| **details:** This variable only will be consider if *target_mode*
+| is ‘classify’.
+| **examples:**
+| 1.
+| [0, 3.3, 4.5]: Means there are two classes as bellow:
+| [0-3.3), [3.3-4]
+"
+"| 4
+| ","| column_identifier
+| ","| **type:** dict or None
+| **default:** None
+| **details:** In cases where column names differ from those 
+| in data input details(link to data input description), a dictionary
+| must be passed to specify the content of each column.
+| **examples:**
+| 1.
+| {“temporal ID”: “time”,
+| “spatial ID”: “city”,
+| “magnitude”: “mag”}
+| 2.
+| {“temporal ID”: “time”,
+| “spatial ID”: “city”,
+| “magnitude”: “mag”,
+| “latitude“: “lat“,
+| “longitude“: “lon“ }
+"
+"| 5
+| ","| verbose
+| ","| **type:** int
+| **default:** 0
+| **details:** The level of details in produced logging information
+| available options:
+| 0: no logging
+| 1: only important information logging
+| 2: all details logging"

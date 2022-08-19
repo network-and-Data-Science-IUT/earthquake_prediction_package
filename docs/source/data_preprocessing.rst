@@ -15,5 +15,6 @@ Data preprocessing module
    set_temporal_id
    aggregate
    extract_feature
+   modify_target
    :maxdepth: 3
    
