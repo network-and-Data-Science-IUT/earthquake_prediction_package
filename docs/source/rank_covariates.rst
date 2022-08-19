@@ -3,12 +3,12 @@ rank_covariates
 
 **Description**
 
-after ranking covariates in this function based on supported methods “correlation”, “mRMR” and “variance”,  the covariates in each resulting subset along with their corresponding historical values form a candidate feature set in the feature selection process.
+after ranking covariates in this function based on supported methods “correlation”, “mRMR” and “variance”,  the covariates in each resulting subset along with their corresponding historical values form a candidate covariate set in the covariate selection process.
 
 
 **Usage**
 
-.. py:function:: data_preprocessing.rank_covariates(data, rank_covariates='mRMR', forced_covariates=[],verbose=0)
+.. py:function:: data_preprocessing.rank_covariates(data, ranking_method='mRMR', forced_covariates=[],verbose=0)
 
 **Parameters**
 

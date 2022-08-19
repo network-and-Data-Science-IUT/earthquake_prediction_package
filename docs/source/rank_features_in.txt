@@ -10,22 +10,22 @@
 | ","| **type:** {‘mRMR’, ‘correlation’, ‘variance’}
 | **default:** ‘mRMR’
 | **details:**
-| ‘correlation’: covariates are ranked based on their correlation with
+| ‘correlation’: features are ranked based on their correlation with
 | target variable.
 | ‘mRMR’: the ranking will be conducted based on mRMR method in which
-| the correlation between the covariates themselves also affects the 
+| the correlation between the features themselves also affects the 
 | choice of rank.
 | ‘variance’: the variance-based sensitivity analysis method will be
-| used in which covariates are prioritized based on the fraction of 
+| used in which features are prioritized based on the fraction of 
 | target variable variance that can be attributed to their variance."
 "| 3
-| ","| forced_covariates
+| ","| forced_features
 | ","| **type:** list<string>
 | **default:** []
 | **details:** 
-| a list of covariates which are placed in the covariate set
+| a list of features which are placed in the feature set
 | by force with their historical values.
-| **example:** ['magnitude','depth']"
+| **example:** ['magnitude t-1','depth t']"
 "| 4
 | ","| verbose
 | ","| **type:** int

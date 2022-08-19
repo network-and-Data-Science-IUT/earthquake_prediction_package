@@ -4,4 +4,5 @@
 | ","| **type:**  list<string>
 | **details:** 
 | a list of ordered covariates (non-ascending based on 
-| the importance of covariates) using a selected ranking method."
+| the importance of covariates) using a selected ranking method.
+| **exmaple** ['magnitude','depth']"

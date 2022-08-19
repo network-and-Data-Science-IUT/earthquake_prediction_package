@@ -1,0 +1,8 @@
+#,Output Name,Output Description
+"| 1
+| ","| ordered_features
+| ","| **type:**  list<string>
+| **details:** 
+| a list of ordered features (non-ascending based on 
+| the importance of features) using a selected ranking method.
+| **exmaple** ['magnitude t','magnitude t-1','depth t']"

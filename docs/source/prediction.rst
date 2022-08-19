@@ -12,5 +12,6 @@ Prediction module
 .. toctree::
    split_data
    rank_covariates
+   rank_features
    :maxdepth: 3
    
