@@ -1,0 +1,25 @@
+#,Input Name,Input Description
+"| 1
+| ","| data
+| ","| **type:** DataFrame or string
+| **default:** -
+| **details:** 
+| a data frame or address of a data frame containing
+| preprocessed data. This data frame must have a column name
+| format conforming to 'Figure link.'
+| **exmaple:** 'eathquake_data.csv'"
+"| 2
+| ","| ordered_covariates_or_features
+| ","| **type:**  list<string>
+| **default:** -
+| **details:**
+| a list of covariates or features which are selected from
+| the input data frame.
+| If the list contains covariate names, the selected feature set
+| includes the covariates and all their historical values in the
+| input data frame.
+| **example:** 
+| 1. ['magnitude t','magnitude t-1','total energy t',
+| 'time elapsed 5.5']
+| 2. ['magnitude','depth']
+"

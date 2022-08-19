@@ -13,5 +13,6 @@ Prediction module
    split_data
    rank_covariates
    rank_features
+   select_features
    :maxdepth: 3
    
