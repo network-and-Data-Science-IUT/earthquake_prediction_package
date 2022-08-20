@@ -8,7 +8,7 @@ creating a data frame from the input data frame containing only features in the 
 
 **Usage**
 
-.. py:function:: data_preprocessing.select_features(data, ordered_covariates_or_features)
+.. py:function:: prediction.select_features(data, ordered_covariates_or_features)
 
 **Parameters**
 
@@ -28,7 +28,7 @@ creating a data frame from the input data frame containing only features in the 
 .. code-block:: python
 
    import pandas as pd
-   from EQPredict.data_preprocessing import select_features
+   from EQPredict.prediction import select_features
    df = pd.read_csv('data.csv')
    new_df = select_features(data=df,
                             ordered_covariates_or_features = ['magnitude t', 'depth',

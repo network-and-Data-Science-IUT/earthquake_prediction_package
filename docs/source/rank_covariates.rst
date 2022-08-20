@@ -8,7 +8,7 @@ after ranking covariates in this function based on supported methods “correlat
 
 **Usage**
 
-.. py:function:: data_preprocessing.rank_covariates(data, ranking_method='mRMR', forced_covariates=[],verbose=0)
+.. py:function:: prediction.rank_covariates(data, ranking_method='mRMR', forced_covariates=[],verbose=0)
 
 **Parameters**
 
@@ -28,7 +28,7 @@ after ranking covariates in this function based on supported methods “correlat
 .. code-block:: python
 
    import pandas as pd
-   from EQPredict.data_preprocessing import rank_covariates
+   from EQPredict.prediction import rank_covariates
    df = pd.read_csv('data.csv')
    ranked_covariates = rank_covariates(data=df,ranking_method='variance',
                                        forced_covariates=['magnitude','temperature'])

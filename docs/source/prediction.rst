@@ -14,5 +14,7 @@ Prediction module
    rank_covariates
    rank_features
    select_features
+   calculate_performance
+   train_test
    :maxdepth: 3
    

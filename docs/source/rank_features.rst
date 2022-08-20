@@ -8,7 +8,7 @@ after ranking features in this function based on supported methods “correlatio
 
 **Usage**
 
-.. py:function:: data_preprocessing.rank_features(data, ranking_method='mRMR', forced_features=[],verbose=0)
+.. py:function:: prediction.rank_features(data, ranking_method='mRMR', forced_features=[],verbose=0)
 
 **Parameters**
 
@@ -28,7 +28,7 @@ after ranking features in this function based on supported methods “correlatio
 .. code-block:: python
 
    import pandas as pd
-   from EQPredict.data_preprocessing import rank_features
+   from EQPredict.prediction import rank_features
    df = pd.read_csv('data.csv')
    ranked_features = rank_features(data=df,ranking_method='variance',
                                        forced_features=['magnitude t-1','depth t'])
