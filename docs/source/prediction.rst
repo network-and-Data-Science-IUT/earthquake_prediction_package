@@ -16,5 +16,6 @@ Prediction module
    select_features
    calculate_performance
    train_test
+   predict_future
    :maxdepth: 3
    
