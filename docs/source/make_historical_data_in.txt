@@ -1,0 +1,40 @@
+#,Input Name,Input Description
+"| 1
+| ","| data
+| ","| **type:** DataFrame or string
+| **default:** -
+| **details:**
+| DataFrame containing spatial & temporal IDs and covariates."
+"| 2
+| ","| layer_number
+| ","| **type:** int
+| **default:** 0
+| **details:**
+| If layer_number = 0 then no covariate will be added as feature(s).
+| If layer_number = k > 0 then the feature list consists
+| of covariates of 1-layer, 2-layer, ..., and k-layer pixel(s).
+| Finding neighbours is like “breadth first search” algorithm
+| as the number of layers increases we deepen our search to deeper layers.
+| Note: if the “maximum_layer_number” was more than the maximum
+| it can be we consider the maximum value instead.
+| if the maximum history length of each covariate is
+| specified in a dictionary with the covariate names as it’s
+| keys and the corresponding maximum layer number as it’s values, the
+| function will produce a dataframe for each combination of covariates’
+| layer numbers."
+"| 3
+| ","| aggregate_layers
+| ","| **type:** Boolean
+| **default:** True
+| **details:**
+| True case: We aggregate all layer levels with some formula (?)
+| False case: We add all layers covariates to feature list."
+"| 4
+| ","| verbose
+| ","| **type:** int
+| **default:** 0
+| **details:**
+| the level of produced detailed logging information.
+| 0: no logging.
+| 1: only important information logging.
+| 2: all details logging."

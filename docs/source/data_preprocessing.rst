@@ -16,5 +16,6 @@ Data preprocessing module
    aggregate
    extract_feature
    modify_target
+   make_historical_data
    :maxdepth: 3
    
