@@ -4,6 +4,7 @@ with warnings.catch_warnings():
     import pandas as pd
     import numpy as np
     import datetime
+    from dateutil.relativedelta import relativedelta
 
 
 
@@ -14,9 +15,9 @@ import configuration
 # renaming the columns to formal format
 def rename_columns(data, column_identifier):
   if type(column_identifier)==dict:
-    if "temporal ID level 1" not in data:
-      if "temporal ID level 1" not in list(column_identifier.keys()):
-         raise ValueError("temporal ID level 1 is not specified in column_identifier.")
+    if "temporal ID" not in data:
+      if "temporal ID" not in list(column_identifier.keys()):
+         raise ValueError("temporal ID is not specified in column_identifier.")
       for key, value in column_identifier.items():
         data.rename(columns = {value:key}, inplace = True)
   elif column_identifier is not None:
@@ -34,9 +35,7 @@ def validate_date(date_text, date_format):
         return False
 
 
-
-
-def set_temporal_id(data, verbose=0, temporal_scale="temporal ID level 1", temporal_unit=1, column_identifier=None):
+def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifier=None):
     # check validity
     # data:
     if type(data) == str:
@@ -48,122 +47,107 @@ def set_temporal_id(data, verbose=0, temporal_scale="temporal ID level 1", tempo
 
     # rename column of data using column identifier
     data = rename_columns(data.copy(), column_identifier)
-    if "temporal ID level 1" not in data:
-        raise ValueError("temporal ID level 1 is not specified in data.\n")
+    if "temporal ID" not in data:
+        raise ValueError("temporal ID is not specified in data.\n")
 
     # remove NaN temporal ID
-    data2 = data[data["temporal ID level 1"].notna()]
+    data2 = data[data["temporal ID"].notna()]
     if len(data2) != len(data):
-        print("Warning: instances with NaN temporal ID level 1 were removed\n")
+        print("Warning: instances with NaN temporal ID were removed\n")
     data = data2
 
     # check validity of data after removing NaN temporal IDs
     if data.empty:
         raise ValueError("The input data is empty.\n")
 
-        # check validity of data in presence of temporal ID level 2
-        if "temporal ID level 2" in data:
-            if data["temporal ID level 2"].dtype != int:
-                raise TypeError("Type of temporal ID level 2 must be int")
-        if "temporal ID level 2" in data:
-            if data["temporal ID level 1"].dtype != int:
-                raise TypeError("In presence of temporal ID level 2, type of temporal ID level 1 must be int")
-
-
     # check validity of temporal id level 1 of type str and convert to datetime
-    if data["temporal ID level 1"].dtype == object and isinstance(data.iloc[0]["temporal ID level 1"], str):
-        if all(data["temporal ID level 1"].apply(validate_date, args=["%Y-%m-%dT%H:%M:%S.%fZ"])):
-            data["temporal ID level 1"] = pd.to_datetime(data["temporal ID level 1"], format="%Y-%m-%dT%H:%M:%S.%fZ")
+    if data["temporal ID"].dtype == object and isinstance(data.iloc[0]["temporal ID"], str):
+        # %Y-%m-%dT%H:%M:%S.%fZ:
+        if all(data["temporal ID"].apply(validate_date, args=["%Y-%m-%dT%H:%M:%S.%fZ"])):
+            data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%Y-%m-%dT%H:%M:%S.%fZ")
 
-        elif all(data["temporal ID level 1"].apply(validate_date, args=["%Y-%m-%d"])):
-            data["temporal ID level 1"] = pd.to_datetime(data["temporal ID level 1"], format="%Y-%m-%d")
-
+        # %Y-%m-%d
+        elif all(data["temporal ID"].apply(validate_date, args=["%Y-%m-%d"])):
+            data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%Y-%m-%d")
+            if unit in ["second", "minute", "hour"]:
+                raise ValueError("This format of temporal ID in data, could not be scaled with units smaller than day")
         else:
-            raise ValueError("format of temporal ID level 1 is not among acceptable foramts of date.\n")
+            raise ValueError("format of temporal ID is not among acceptable foramts of date.\n")
 
-
-    # temporal_scale
-    if type(temporal_scale) != str:
+    # unit
+    if type(unit) != str:
         raise TypeError("The temporal scale must be of type str.\n")
-    if temporal_scale not in configuration.TEMPORAL_SCALE_OPTIONS:
+    if unit not in TEMPORAL_UNIT_OPTIONS:
         raise ValueError(
-            "The temporal scale should be among these options [second, minute, hour, day, week, month, yaer, temporal ID level 1, temporal ID level 2].\n")
-    if temporal_scale == "temporal ID level 1" and (data["temporal ID level 1"].dtype != int):
-        raise TypeError("To choose tempoal ID level 1 as temporl_scale, type of this column in data must be int.\n")
-    if (temporal_scale == "temporal ID level 2"):
-        if ("tempoal ID level 2" not in data):
-            raise ValueError("temporal ID level 2 is not specified in data")
-        if (data["temporal ID level 2"].dtype != int):
-            raise TypeError(
-                "To choose tempoal ID level 2 as temporl_scale, type of temporal ID level 1, 2 in data must be int.\n")
-    if (data["temporal ID level 1"].dtype == int):
-        if temporal_scale not in ["temporal ID level 1", "temporal ID level 2"]:
+            "The temporal scale should be among these options [second, minute, hour, day, week, month, yaer, temporal ID].\n")
+    if unit == "temporal ID" and (data["temporal ID"].dtype != int):
+        raise TypeError("To choose tempoal ID as temporl_scale, type of this column in data must be int.\n")
+    if (data["temporal ID"].dtype == int):
+        if unit != "temporal ID":
             raise ValueError(
-                temporal_scale + " as temporal scale is only available in the case of temporal ID level 1 of acceptable datetime formats.\n")
-        if temporal_unit != 1:
+                unit + " as temporal scale is only available in the case of temporal ID in acceptable datetime formats.\n")
+        if step != 1:
             raise ValueError("Temporal unit in case of temporal ID of type int, is meaningless.\n")
 
-
     # tempoal_unit
-    if type(temporal_unit) != int:
+    if type(step) != int:
         raise TypeError("The temporal unit must be of type int")
-        if temporal_unit < 0:
+        if step < 0:
             raise ValueError("temporal unit should be a positive number.\n")
 
-
     # column_identifier validity is checked in rename_column function
-
-
-    # temporal_scale == temopral ID level 1:
-    if temporal_scale == "temporal ID level 1":
-        data.sort_values(by="temporal ID level 1")
-        data["Temporal ID"] = data["temporal ID level 1"]
-    # temporal_scale == temporal ID level 2:
-    if temporal_scale == "temporal ID level 2":
-        data.sort_values(by="temporal ID level 2")
-        data["Temporal ID"] = data["temporal ID level 2"]
-
+    data.insert(0, 'Temporal ID', '')
+    # unit == temopral ID:
+    if unit == "temporal ID":
+        data.sort_values(by="temporal ID")
+        data["Temporal ID"] = data["temporal ID"]
 
     # sort data
-    if pd.api.types.is_datetime64_dtype(data["temporal ID level 1"].dtype):
-        data.sort_values(by="temporal ID level 1")
-        data["temporal ID level 1"].dt
-
+    if pd.api.types.is_datetime64_dtype(data["temporal ID"].dtype):
+        data.sort_values(by="temporal ID")
+        data["temporal ID"].dt
 
         # to milliseconds
-        data["seconds"] = data["temporal ID level 1"].astype(int)
-        data["seconds"] = data["seconds"].div(1000000).astype(int)
+        data["miliseconds"] = data["temporal ID"].astype(int)
+        data["miliseconds"] = data["miliseconds"].div(1000000).astype(int)
 
+    first_id = data["temporal ID"][0]
+    # unit == second
+    if unit == "second":
+        data["Temporal ID"] = (((data["miliseconds"] - data["miliseconds"][0]) // 1000) // step) + 1
+        print(data)
 
-        # temporal_scale == second
-        if temporal_scale == "second":
-            scale = temporal_unit * 1000
+    # unit == minute (60 seconds)
+    if unit == "minute":
+        print("hihi")
+        data["Temporal ID"] = (((data["miliseconds"] - data["miliseconds"][0]) // 60000) // step) + 1
+        print(data)
 
-        # temporal_scale == minute
-        if temporal_scale == "minute":
-            scale = temporal_unit * 60000
+    # unit == hour (3600 seconds)
+    if unit == "hour":
+        data["Temporal ID"] = (((data["miliseconds"] - data["miliseconds"][0]) // 3600000) // step) + 1
+        print(data)
 
-        # temporal_scale == hour
-        if temporal_scale == "hour":
-            scale = temporal_unit * 3600000
+    # unit == day
+    if unit == "day":
+        data["Temporal ID"] = (((data["temporal ID"] - first_id).dt.days) // step) + 1
+        print(data)
 
-        # temporal_scale == day  (24 hours)
-        if temporal_scale == "day":
-            scale = temporal_unit * 86400000
+    # unit == week (7 days)
+    if unit == "week":
+        data["Temporal ID"] = (((data["temporal ID"] - first_id).dt.days) // (7 * step)) + 1
 
-        # temporal_scale == week (7 days)
-        if temporal_scale == "week":
-            scale = temporal_unit * 604800000
+    # unit == month
+    if unit == "month":
+        data["y"] = data.apply(lambda x: relativedelta(x['temporal ID'], first_id).years, axis=1)
+        data["m"] = data.apply(lambda x: relativedelta(x['temporal ID'], first_id).months, axis=1)
+        data["Temporal ID"] = (((data["y"] * 12) + data["m"]) // step) + 1
 
-        # temporal_scale == month (30 days)
-        if temporal_scale == "month":
-            scale = temporal_unit * 2592000000
+    # unit == year
+    if unit == "year":
+        data["Temporal ID"] = (data.apply(lambda x: relativedelta(x['temporal ID'], first_id).years, axis=1) // step) + 1
+        
 
-        # temporal_scale == year (365 days)
-        if temporal_scale == "year":
-            scale = temporal_unit * 31536000000
-
-        first_id = data["seconds"][0]
-        data["Temporal ID"] = (((data["seconds"] - first_id) / scale) + 1).astype(int)
-    data = data.set_index("Temporal ID", drop=False)
+    data = data.drop(['miliseconds', 'y', 'm'], axis=1, errors='ignore')
+    data.rename(columns={"temporal ID": "time", "Temporal ID": "temporal ID"}, errors="ignore", inplace=True)
     return data
