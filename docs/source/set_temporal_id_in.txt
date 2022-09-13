@@ -1,18 +1,19 @@
 #,Input Name,Input Description
 "| 1
 | ","| data 
-| ","| **type:** data frame or str
+| ","| **type:** DataFrame or str
 | **default:** -
 | **details:**
-| a data frame or address of a data frame.
+| a DataFrame or address of a DataFrame.
 | The data includes the following column:
 | temporal ID:
 | The type of this column is one of below types:
 | 1. datetime object
-| 2. string(“yy/mm/dd hh:mm:ss”)
-| 3. Integer of float (seconds)
-| NOTE: if the time column name is not 'temporal ID', 
-| it should be spedified in 'column identifier'."
+| 2. str (“YYYY-MM-DDTHH:mm:SS.fffZ”)
+| 3. str(“YYYY-MM-DD”)
+| 3. int (predefind temporal ID)
+| NOTE: if the time column name is not 'temporal ID',
+| it should be spedified in 'column_identifier'."
 "| 2
 | ","| column_identifier
 | ","| **type:** dict or None
@@ -22,25 +23,32 @@
 | we expect, a dictionary must be passed to specify the content 
 | of each column.
 | in this function we only need 'temporal ID' column to be specified. 
-| **example:** {'temporal ID':'Time'}"
+| **example:** {'temporal ID':'time'}"
 "| 3
-| ","| temporal_scale
-| ","| **type:** str, int, or float
+| ","| unit
+| ","| **type:** str
 | **default:** -
 | **options:**
-| string type:
-| [“minute”,”hour”,“day”,”week”,”month”,”year”,”no_scaling”].
-| int or float type: seconds.
+| ["second", "minute", "hour", "day", "week", "month", "year", "temporal ID"]
 | **details:**
-| Time column must be one of the following types:
-| 1. datetime object
-| 2. string(“yy/mm/dd hh:mm:ss”)
-| 3. Integer of float (seconds)
-| If the option “no_scaling” was chosen, we sort the “temporal ID” column
-| (specified in “column_identifier”) and set a corresponding temporal ID
-| to each of them.
+| "temporal ID" option is only valid in the case of temporal ID column
+| of type int.
+| "second", "minute", "hour", "day", "week", "month", "year" are only
+| valid in the case of temporal ID column as type datetime or str in
+| supported formats described in data.
+| The temporal unit should not be smaller than the measurement accuracy
+| of temporal ID column of date.
 "
 "| 4
+| ","| step
+| ","| **type:** int
+| **default:** 1
+| **details:** The temporl step to use in scaling, regarding the
+| temporal unit.
+| **example:** If the unit is "day" and the step is 5,
+| the difference between two consecutive IDs will be
+| greater than or equal to 5 5 days"
+"| 5
 | ","| verbose
 | ","| **type:** int
 | **default:** 0

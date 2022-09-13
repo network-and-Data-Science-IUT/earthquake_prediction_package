@@ -3,12 +3,12 @@ set_temporal_id
 
 **Description**
 
-Label a group of samples with the same temporal ID according to the desired temporal scale.Temporal ID identifies which time period a sample belongs to.
+Label a group of samples with the same temporal ID according to the desired temporal unit and step.Temporal ID identifies which time period a sample belongs to.
 
 
 **Usage**
 
-.. py:function:: data_preprocessing.set_temporal_id(data, column_identifier = None,temporal_scale ,verbose = 0)
+.. py:function:: data_preprocessing.set_temporal_id(data,column_identifier=None,unit = 'temporal ID',step = 1,verbose = 0):
 
 **Parameters**
 
@@ -30,10 +30,10 @@ Label a group of samples with the same temporal ID according to the desired temp
 .. code-block:: python
 
    import pandas as pd
-   from EQPredict.data_preprocessing import set_temporal_id
+   from EearthquakeForecast.data_preprocessing import set_temporal_id
    df = pd.read_csv('data.csv')
    set_temporal_id(data=df,column_identifier={'temporal ID':'time'},
-   temporal_scale = 'month')
+   unit = 'month', step = 3)
 .. _target fig 4:
    :align: center
    :scale: 50 %
