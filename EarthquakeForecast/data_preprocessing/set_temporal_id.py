@@ -115,23 +115,18 @@ def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifi
     # unit == second
     if unit == "second":
         data["Temporal ID"] = (((data["miliseconds"] - data["miliseconds"][0]) // 1000) // step) + 1
-        print(data)
 
     # unit == minute (60 seconds)
     if unit == "minute":
-        print("hihi")
         data["Temporal ID"] = (((data["miliseconds"] - data["miliseconds"][0]) // 60000) // step) + 1
-        print(data)
 
     # unit == hour (3600 seconds)
     if unit == "hour":
         data["Temporal ID"] = (((data["miliseconds"] - data["miliseconds"][0]) // 3600000) // step) + 1
-        print(data)
 
     # unit == day
     if unit == "day":
         data["Temporal ID"] = (((data["temporal ID"] - first_id).dt.days) // step) + 1
-        print(data)
 
     # unit == week (7 days)
     if unit == "week":
@@ -145,9 +140,8 @@ def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifi
 
     # unit == year
     if unit == "year":
-        data["Temporal ID"] = (data.apply(lambda x: relativedelta(x['temporal ID'], first_id).years, axis=1) // step) + 1
-        
-
+        data["Temporal ID"] = (data.apply(lambda x: relativedelta(x['temporal ID'], first_id).years,
+                                          axis=1) // step) + 1
     data = data.drop(['miliseconds', 'y', 'm'], axis=1, errors='ignore')
     data.rename(columns={"temporal ID": "time", "Temporal ID": "temporal ID"}, errors="ignore", inplace=True)
     return data
