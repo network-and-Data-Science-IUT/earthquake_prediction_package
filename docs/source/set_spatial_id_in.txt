@@ -4,83 +4,83 @@
 | ","| **type:** DataFrame or string
 | **default:** -
 | **details:** A DataFrame or a string as the address of a CSV file
-| The *data* must either include the columns *latitude* and *longitude* or
-| already contains *spatial ID* column."
+| The *data* must either include the columns *latitude* and *longitude* (also *depth* 
+| if three-diminsional pixelating is considered.) or already contains 
+| *spatial ID* column."
 "| 2
 | ","| column_identifier
 | ","| **type:** dict or None
 | **default:** None
 | **details:** If the input data column names, don’t match
 | the specified format we expect,
-| (i.e, “longitude”, “latitude”, “depth”, “temporal ID”, “magnitude”)
+| (i.e, “longitude”, “latitude”, “depth”, “spatial ID”)
 | a dictionary must be passed to specify the content of each column.
-| In this case, user has to clarify the columns containing temporal and
-| spatial IDs and pass other columns which contain other covariates,
-| as  lists of “temporal covariates” and “spatial covariates”.
+| in case of two-diminsional pixelating or kmeans clustering:
+| user has to clarify the columns *longitude* and *latitude*.
+| in case of three-diminsional pixelating:
+| user has to clarify the columns *longitude*, *latitude* and *depth*.
+| in other cases:
+| user has to clarify the column *spatial ID*.
 | The user must specify whether the longitude & latitude or spatial ID column.
-| The user must specify temporal ID column.
-| Specifying depth and magnitude is optional and is only necessary if user
-| wants to do 3D pixelating or extract some specified features.
+| Specifying depth is optional and is only necessary if user
+| wants to do three-diminsional pixelating.
 |
 | **examples:**
 | 1.
-| {“temporal ID”: “time”
-| “spatial ID”: “city”,
-| “temporal covariates”: [“temperature”,”magnitude”] ,
-| “spatial covariates”: [“area”, “population”] ,
-| “target”: “magnitude”}
+| {“spatial ID”: “city”}
 | 2.
-| {“temporal ID”: “time” ,
-| “latitude”: “lat”,   “longitude”: “lon”,
-| “temporal covariates”: [“temperature”,”magnitude”] ,
-| “spatial covariates”: [“area”, “population”] ,
-| “target”: “magnitude”}"
+| {“latitude”: “lat”,“longitude”: “lon”}"
 "| 3
 | ","| pixel_scale
 | ","| **type:** list<int>
 | **default:** None
 | **details:** A list of integers containing two or three elements.
-| Two-element case:
+| in case the list contains two elements:
 | Longitude (x-axis) will be divided into 'First element value' parts.
 | Latitude (y-axis) will be divided into 'Second element value' parts.
-| Three-element case:
+| in case the list contains three elements:
 | Longitude (x-axis) will be divided into 'First element value' parts.
 | Latitude (y-axis) will be divided into 'Second element value' parts.
 | Depth (z-axis) will be divided into 'Third element value' parts.
 | **examples:**
-| 1. (3, 4); the map will be divided into 4*3 pixels
-| 2. (3, 4, 2); ..."
+| 1. (3, 4); the map will be divided into 3*4 pixels.
+| 2. (3, 4, 2); the map will be divided into 3*4*2 pixels."
 "| 4
 | ","| kmeans_clusters
 | ","| **type:** int
 | **default:** None
-| **details:** A list of integers containing two or three elements.
+| **details:**
 | number of clusters if we want to use K-means algorithm to give
-| a spatial id for each longitude and latitude.
-| The Formula of indexing the clusters:
-| Sort the centroids based on longitude(x-axis) and then latitude(y-axis)
-| and then set a spatial id from zero
-| to ‘number of clusters’ to them in turn."
+| a spatial id for each longitude and latitude."
 "| 5
 | ","| target_area
-| ","| **type:** list<float>
+| ","| **type:** list<float> or list<int>
 | **default:** None
 | **details:**
-| We have two cases for this list:
+| represent the area that is considered for prediction.
 | A four-sized list:
-| First element: “min-longitude”,
-| Second element:“max-longitude”,
-| Third element: “min-latitude”,
+| First element: “max-longitude”,
+| Second element:“min-longitude”,
+| Third element: “max-latitude”,
 | Fourth element: “max-latitude”.
 | A six-sized list:
-| First element: “min-longitude”,
-| Second element:“max-longitude”,
-| Third element: “min-latitude”,
-| Fourth element: “max-latitude”,
-| Fifth element:“min-depth”,
-| Sixth element:“max-depth” .
+| First element: “max-longitude”,
+| Second element:“min-longitude”,
+| Third element: “max-latitude”,
+| Fourth element: “min-latitude”,
+| Fifth element:“max-depth”,
+| Sixth element:“min-depth”.
 | Latitude and longitude are degree scale.
-| Depth is kilometer scale.
+| -90 <= latitude <= 90, -180 <= longitude <= 180
 | **examples:**
 | 1. [1.2,1.4,10.31,10.42]
-| 2. [1.2,1.4,10.31,10.42, 0,100]"
+| 2. [1.2,1.4,10.31,10.42, 1,100]"
+"| 6
+| ","| plot
+| ","| **type:** boolean
+| **default:** True
+| **details:**
+| if True it will plot events with their coresponding
+| *longitude* & *latitude* along with their spatial ID
+| or the subregion they belong and save it.
+|"

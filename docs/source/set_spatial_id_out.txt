@@ -3,5 +3,6 @@
 | ","| spatial_scaled_dataframe
 | ","| **type:** DataFrame
 | **details:**
-| A dataframe with a new column “spatial_id” that
-| shows an event belongs to which geographical subregion."
+| A dataframe with a new column “spatial ID” that
+| shows an event belongs to which geographical subregion
+| (pixel or cluster)."
