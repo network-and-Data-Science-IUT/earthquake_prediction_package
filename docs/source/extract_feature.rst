@@ -3,7 +3,9 @@ extract_feature
 
 **Description**
 
-extract extra features to enrich the feature list.
+extract extra spatial or temporal features to enrich feature list.
+
+spatial features: 'delta time x', 'b value'. temporal features: 'event frequency', 'total energy'
 
 **Usage**
 
@@ -27,11 +29,10 @@ extract extra features to enrich the feature list.
 .. code-block:: python
 
    import pandas as pd
-   from EQPredict.data_preprocessing import extract_feature
+   from EarthquakeForecast.data_preprocessing import extract_feature
    df = pd.read_csv('data.csv')
    extracted_features = extract_feature(data=df,column_identifier={'temporal ID':'time',
    'spatial ID':'city',
-   'longitude':'lon','latitude':'lat',
    'magnitude':'mag'},
-   feature_list = ['density','total energy'])
+   feature_list = ['delta time 4.5','total energy'])
 

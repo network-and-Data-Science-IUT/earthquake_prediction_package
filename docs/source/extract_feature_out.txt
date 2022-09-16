@@ -1,6 +1,11 @@
 #,Output Name,Output Description
 "| 1
-| ","| extracted_features
+| ","| extracted_features_temporal
 | ","| **type:** DataFrame
 | **details:** a data frame containing temporal and spatial IDs with
-| their corresponding extracted features."
+| their corresponding extracted temporal features."
+"| 2
+| ","| extracted_features_spatial
+| ","| **type:** DataFrame
+| **details:** a data frame containing spatial IDs with
+| their corresponding extracted spatial features."
