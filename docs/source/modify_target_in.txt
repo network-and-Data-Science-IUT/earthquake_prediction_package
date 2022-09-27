@@ -9,30 +9,17 @@
 | arbitrary names, their content must be specified using the 
 | *column_identifier* arguments.
 | 
-| Spatial ids:The id of the units in the finest spatial scale of input 
-| data must be included in the *data* in a column with the name
-| ‘spatial id level 1’.
+| target: this column is the target that needs to be modified in 
+| in this function.
 |
-| Temporal ids: The id of time units recorded in the input data for each
-| temporal scale must be included as a separate column in the 
-| temporal_data with the name in a format ‘temporal id level x’, where ‘x’
-| is the related temporal scale level beginning with level 1 for the
-| smallest scale. The temporal units could have a free but sortable
-| format like year number, week number and so on. The combination of
-| these temporal scale levels' ids should form a unique identifier.
-| However, the integrated foramt of data and time is also supported. In
-| the case of using integrated format, only the smallest temporal scale
-| must be included in the temporal_data with the column name of 
-| ‘temporal id’. The expected format of each scale is shown in Table 2.
-| **examples:** ‘USGS earthquake temporal data.csv’"
+| temporal ID: The id of time units recorded in the input data."
 "| 2
 | ","| target_mode
-| ","| **type:** {‘none’, ‘cumulative’, ‘differential’, 
-| ‘moving average x’, ‘classify’}
+| ","| **type:** {‘cumulative’, ‘differential’, 
+| ‘moving average x’, ‘classify’} or None
 | **default:** ‘none’
 | **details:** The mode of target variable, which is of great importance in 
 | prediction module and may cause diffrent appearance in the model. 
-| ‘none’: No modification. 
 | ‘cumulative’: The target variable shows the cumulative value of all
 | the targets from the first temporal unit in the data.
 | ‘differential’: The target variable shows the diffrence between the
@@ -40,8 +27,9 @@
 | ‘moving average x’: The target variable shows the average of
 | the window of x temporal units which it is located in.
 | ‘classify’: This option classifies the target into some classes.
-| if the ‘target_mode’ is set to ‘classify’, ‘class_boundaries’ should
+| if the ‘target_mode’ is set to ‘classify’, ‘class_boundaries’ must
 | also be set.
+| if target_mode is None, target will not be modified.
 "
 "| 3
 | ","| class_boundaries
@@ -52,7 +40,10 @@
 | **examples:**
 | 1.
 | [0, 3.3, 4.5]: Means there are two classes as bellow:
-| [0-3.3), [3.3-4]
+| [0-3.3] = label 0, [3.3-4] = label 1
+| 2.
+| [0, 3.3, 4.5,7]: Means there are three classes as bellow:
+| [0-3.3] = label 0, [3.3-4] = label 1, [4.5-7] = label 2
 "
 "| 4
 | ","| column_identifier
@@ -64,21 +55,4 @@
 | **examples:**
 | 1.
 | {“temporal ID”: “time”,
-| “spatial ID”: “city”,
-| “magnitude”: “mag”}
-| 2.
-| {“temporal ID”: “time”,
-| “spatial ID”: “city”,
-| “magnitude”: “mag”,
-| “latitude“: “lat“,
-| “longitude“: “lon“ }
-"
-"| 5
-| ","| verbose
-| ","| **type:** int
-| **default:** 0
-| **details:** The level of details in produced logging information
-| available options:
-| 0: no logging
-| 1: only important information logging
-| 2: all details logging"
+| “target“:“magnitude”}"

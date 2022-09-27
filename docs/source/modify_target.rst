@@ -8,7 +8,7 @@ the selected target_mode.
 
 **Usage**
 
-.. py:function:: data_preprocessing.modify_target(data, target_mode=‘none’, calss_boundaries, column_identifier=None, verbose=0)
+.. py:function:: data_preprocessing.modify_target(data, target_mode=None, calss_boundaries=None, column_identifier=None)
 
 **Parameters**
 
