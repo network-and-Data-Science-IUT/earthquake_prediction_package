@@ -190,27 +190,21 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
             mean_covariates = list(dict.fromkeys(mean_covariates))
             mean_data = data.copy()[mean_covariates]
             mean_data = mean_data.groupby(["temporal ID", "spatial ID"]).mean().reset_index()
-            mean_data = mean_data.rename({col: 'mean_' + col for col in
-                                          mean_data.columns[~mean_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                                         axis=1)
+
 
         # aggregation mode = max in dict
         if len(max_covariates) > 0:
             max_covariates += ["temporal ID", "spatial ID"]
             max_data = data.copy()[max_covariates]
             max_data = max_data.groupby(["temporal ID", "spatial ID"]).max().reset_index()
-            max_data = max_data.rename(
-                {col: 'max_' + col for col in max_data.columns[~max_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                axis=1)
+
 
         # aggregation_mode = min in dict
         if len(min_covariates) > 0:
             min_covariates += ["temporal ID", "spatial ID"]
             min_data = data.copy()[min_covariates]
             min_data = min_data.groupby(["temporal ID", "spatial ID"]).min().reset_index()
-            min_data = min_data.rename(
-                {col: 'min_' + col for col in min_data.columns[~min_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                axis=1)
+
 
         # aggregation_mode = std in dict
         if len(std_covariates) > 0:
@@ -218,27 +212,21 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
             std_data = data.copy()[std_covariates]
             std_data = (std_data.groupby(["temporal ID", "spatial ID"]).std().fillna(
                 data.groupby(['temporal ID', 'spatial ID']).last())).reset_index()
-            std_data = std_data.rename(
-                {col: 'std_' + col for col in std_data.columns[~std_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                axis=1)
+
 
         # aggreigation mode = sum in dict
         if len(sum_covariates) > 0:
             sum_covariates += ["temporal ID", "spatial ID"]
             sum_data = data.copy()[sum_covariates]
             sum_data = sum_data.groupby(["temporal ID", "spatial ID"]).sum().reset_index()
-            sum_data = sum_data.rename(
-                {col: 'sum_' + col for col in sum_data.columns[~sum_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                axis=1)
+
 
         # aggreigation mode = mode in dict
         if len(mode_covariates) > 0:
             mode_covariates += ["temporal ID", "spatial ID"]
             mode_data = data.copy()[sum_covariates]
             mode_data = mode_data.groupby(['temporal ID', 'spatial ID']).agg(lambda x: pd.Series.mode(x)[0])
-            mode_data = mode_data.rename({col: 'mode_' + col for col in
-                                          mode_data.columns[~mode_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                                         axis=1)
+
 
         datas = [mean_data, max_data, min_data, sum_data, mode_data, std_data]
         dataframes = []
@@ -268,17 +256,13 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
             spa_cov_list += ["temporal ID", "spatial ID"]
             mean_data = data[spa_cov_list].copy()
             mean_data = mean_data.groupby(["temporal ID", "spatial ID"]).mean().reset_index()
-            mean_data = mean_data.rename({col: 'mean_' + col for col in
-                                          mean_data.columns[~mean_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                                         axis=1)
+
 
             std_data_list = [x for x in data.columns if not (x in spatial_covariates)]
             std_data = data[std_data_list].copy()
             std_data = (std_data.groupby(["temporal ID", "spatial ID"]).std().fillna(
                 data.groupby(['temporal ID', 'spatial ID']).last())).reset_index()
-            std_data = std_data.rename(
-                {col: 'std_' + col for col in std_data.columns[~std_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                axis=1)
+
 
             dataframes = []
             dataframes.append(mean_data)
@@ -298,16 +282,12 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
             spa_cov_list += ["temporal ID", "spatial ID"]
             mean_data = data[spa_cov_list].copy()
             mean_data = mean_data.groupby(["temporal ID", "spatial ID"]).mean().reset_index()
-            mean_data = mean_data.rename({col: 'mean_' + col for col in
-                                          mean_data.columns[~mean_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                                         axis=1)
+
 
             sum_data_list = [x for x in data.columns if not (x in spatial_covariates)]
             sum_data = data[sum_data_list].copy()
             sum_data = sum_data.groupby(["temporal ID", "spatial ID"]).sum().reset_index()
-            sum_data = sum_data.rename(
-                {col: 'sum_' + col for col in sum_data.columns[~sum_data.columns.isin(['temporal ID', 'spatial ID'])]},
-                axis=1)
+            
 
             dataframes = []
             dataframes.append(mean_data)
