@@ -145,7 +145,7 @@ def input_checking_modify_target(data,target_mode,class_boundaries,column_identi
         if not (isinstance(target_mode,str)):
             raise TypeError('Error: invalid type for \'target_mode\' input.')
         # value checking:
-        if not ((target_mode in configurations.TARGET_MODES)):
+        if not ((target_mode in  configurations.TARGET_MODES)):
             if target_mode.startswith('moving average '):
                 try:
                     int(target_mode[len('moving average '):])
@@ -224,16 +224,15 @@ def differential(target_signal):
 
 
 
-def moving_average(target_signal):
-    global window_size
-    moving_averaged_target = target_signal.rolling(window=3, min_periods=0).mean()
+def moving_average(target_signal,window_size):
+
+    moving_averaged_target = target_signal.rolling(window=window_size, min_periods=0).mean()
     return moving_averaged_target
 
 
 
-def classify(target_signal):
+def classify(target_signal,class_boundaries):
     import pandas as pd
-    global class_boundaries
     target_without_nan = target_signal.dropna()
     classifed_target = pd.cut(target_without_nan,bins=class_boundaries,
     labels=list(range(len(class_boundaries)-1)))
@@ -246,25 +245,31 @@ def modify_target(data,class_boundaries=None,target_mode=None,column_identifier=
         import numpy as np
         import pandas as pd
         data = input_checking_modify_target(data=data,class_boundaries=class_boundaries,target_mode=target_mode,column_identifier=column_identifier)
+        ######################################################################### normal
+        if target_mode is None:
+            data['Target (normal)'] = data['target']
+            data = data.rename(columns={'target':'Normal target'})   
+            return data
         ######################################################################### cumulative
         if target_mode == 'cumulative':
             mask = data['target'].isna()
-            data['target'] = data['target'].where(mask,other=cumulative)
+            data['Target (cumulative)'] = data['target'].where(mask,other=cumulative)
+            data = data.rename(columns={'target':'Normal target'})
 
         ######################################################################### differential
         elif target_mode == 'differential': # make target differential
             mask = data['target'].isna()
-            data['target'] = data['target'].where(mask,other=differential)
-
+            data['Target (differential)'] = data['target'].where(mask,other=differential)
+            data = data.rename(columns={'target':'Normal target'})
         ######################################################################### classify
         elif target_mode == 'classify': # make target classified
             mask = data['target'].isna()
-            data['target'] = data['target'].where(mask,other=classify)
-
+            data['Target (classify)'] = data['target'].where(mask,other=lambda target_signal : classify(target_signal,class_boundaries))
+            data = data.rename(columns={'target':'Normal target'})
         ######################################################################### moving average
         elif target_mode.startswith('moving average'):
             window_size = int(target_mode[len('moving average '):])
             mask = data['target'].isna()
-            data['target'] = data['target'].where(mask,other=moving_average)
-
+            data['Target (moving average)'] = data['target'].where(mask,other=lambda target_signal : moving_average(target_signal,window_size))
+            data = data.rename(columns={'target':'Normal target'})  
         return data
