@@ -6,8 +6,17 @@ with warnings.catch_warnings():
 
 # renaming the columns to formal format
 def rename_columns(data, column_identifier):
-    if type(column_identifier) == dict:
+    if type(column_identifier) != dict:
+      raise TypeError("column_identifier must be of type dict.")
+    else:
         for key, value in column_identifier.items():
+            if type(value) == str:
+               if value not in data:
+                 raise ValueError("{} does not exist in data columns.\n".format(value))
+            if type (value) == list:
+              for i in  value:
+                if i not in data:
+                 raise ValueError("{} does not exist in data columns.\n".format(i))
             if key == "temporal ID":
                 continue
             elif key == "spatial ID":
@@ -25,35 +34,53 @@ def rename_columns(data, column_identifier):
                 raise ValueError("temporal ID is not specified in column_identifier.")
             else:
                 data.rename(columns={column_identifier["temporal ID"]: "temporal ID"}, inplace=True)
+        elif "temporal ID" in list(column_identifier.keys()):
+          print("Warning: temporal ID is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so temporal ID has been removed from column_identifier.\n")
+          column_identifier.pop("temporal ID")
 
         if "spatial ID" not in data:
             if "spatial ID" not in list(column_identifier.keys()):
                 raise ValueError("spatial ID is not specified in column_identifier.")
             else:
-                data.rename(columns={column_identifier["spatial ID"]: "spatial ID"}, inplace=True)
-
+              if column_identifier["spatial ID"] not in data:
+                raise ValueError("temporal ID and spatial ID should be unique columns.")
+              data.rename(columns={column_identifier["spatial ID"]: "spatial ID"}, inplace=True)
+        elif "spatial ID" in list(column_identifier.keys()):
+          print("Warning: spatial ID is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so spatail ID has been removed from column_identifier.\n")
+          column_identifier.pop("spatial ID")
         if "target" not in data:
             if "target" not in list(column_identifier.keys()):
                 raise ValueError("target is not specified in column_identifier.")
             else:
+                if column_identifier["target"] not in data:
+                  raise ValueError("target should be an unique column.")
                 data.rename(columns={column_identifier["target"]: "target"}, inplace=True)
-        if "spatial covariates" in column_identifier:
-            if ("temporal covariates" not in column_identifier) or (len(column_identifier["temporal covariates"]) == 0):
+        elif "target" in list(column_identifier.keys()):
+          print("Warning: target is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so target has been removed from column_identifier.\n")
+          column_identifier.pop("target")
+
+        if ("temporal covariates" not in column_identifier):
                 raise ValueError("At least one temporal covariate must be specified in column identifier")
-        if "spatial covariates" in data:
-            if len(list(
-                    set(column_identifier["temporal covariates"]) & set(column_identifier["spatial covariates"]))) > 0:
+        elif (len(column_identifier["temporal covariates"]) == 0):
+                raise ValueError("At least one temporal covariate must be specified in column identifier")
+        for item in column_identifier["temporal covariates"]:
+          if item in column_identifier.values():
+            raise ValueError("temporal covariates should be unique columns.\n")
+        if "spatial covariates" in column_identifier:
+            if len(list(set(column_identifier["temporal covariates"]) & set(column_identifier["spatial covariates"]))) > 0:
                 raise ValueError("A covariate can not be in both temporal covariates and spatial covariates")
-        if "spatail covariates" in data:
-            if (column_identifier["target"] in column_identifier["temporal covariates"]) or (
-                    column_identifier["target"] in column_identifier["spatial covariates"]):
+        if "spatail covariates" in column_identifier:
+          if "target" in column_identifier:
+            if (column_identifier["target"] in column_identifier["temporal covariates"]) or (column_identifier["target"] in column_identifier["spatial covariates"]):
                 raise ValueError("target should not be in temporal covariates or spataial covariates")
         else:
+          if "target" in column_identifier:
             if (column_identifier["target"] in column_identifier["temporal covariates"]):
                 raise ValueError("target should not be in temporal or spataial covariates")
-    elif column_identifier is not None:
-        raise TypeError("The column_identifier must be of type dict")
     return data
+
+
+from numpy import NaN
 
 
 def make_historical_data(data, forecast_horizon, history_length=1, column_identifier=None):
@@ -79,12 +106,17 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
     else:
         raise TypeError("The history_length must be of type int or dict.\n")
     # column_identifier
-    if column_identifier != None:
-        data = rename_columns(data.copy(), column_identifier)
-    if "temporal ID" not in data:
-        raise ValueError("temporal ID is not specified in data.\n")
-    if "spatial ID" not in data:
-        raise ValueError("spatial ID is not specified in data.\n")
+    if type(column_identifier) != dict:
+        raise TypeError("column_identifier must be of type dict.\n")
+    if "target" in data:
+        target_as_temporal_covar = data["target"]
+        target_as_temporal_covar_name = "target*"
+    elif "target" in column_identifier:
+        target_as_temporal_covar = data[column_identifier["target"]]
+        target_as_temporal_covar_name = column_identifier["target"]
+    else:
+        raise ValueError("The target column must be specified in data or column_identifier.\n")
+    data = rename_columns(data.copy(), column_identifier)
     # column_identifier validity
     if "temporal covariates" not in column_identifier:
         raise ValueError("temporal covariates are not specified in column identifier\n")
@@ -97,7 +129,6 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
         if type(column_identifier["spatial covariates"]) != list:
             raise TypeError("spatail covariates should be specified in column identifier in a list.\n")
         for spatial_covar in column_identifier["spatial covariates"]:
-            print(spatial_covar)
             grouped_data = data.groupby("spatial ID")
             for name_of_group, contents_of_group in grouped_data:
                 spatial_covar_list_in_group = contents_of_group[spatial_covar].tolist()
@@ -116,6 +147,9 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
     else:
         spatial_covariates = []
     temporal_covariates = [item for item in list(column_identifier['temporal covariates']) if item in data.columns]
+    # add content of target column befor renaming to data and temporal covariates
+    data[target_as_temporal_covar_name] = target_as_temporal_covar
+    temporal_covariates.append(target_as_temporal_covar_name)
     if type(history_length) == int:
         history_length_dict = {covar: history_length for covar in temporal_covariates}
 
@@ -129,7 +163,7 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
                     "Warning: history_length of {} which is a temporal covariate, is not specified in dictionary of history_length. 1 as default history_length applied for that.\n".format(
                         item))
 
-        # history length shoul contain nothing other than temporal covariates
+        # history length should contain nothing other than temporal covariates
         for item in list(history_length_dict):
             if item not in temporal_covariates:
                 print(
@@ -146,34 +180,83 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
                 "The specified history length for each covariate in the history_length dict must be of type int.\n")
         if history_length_dict[covar] <= 0:
             raise ValueError("history_length must be a positive number")
+    # prepare data
+    # remove columns other than temporal and spatial ids, target , temporal and spatial covariates
+    for column in data:
+        if column not in ["target", "temporal ID", "spatial ID"]:
+            if column not in (spatial_covariates + temporal_covariates):
+                data.drop(column, inplace=True, axis=1)
+                print(
+                    "Warning: {} is neither target nor temporal ID nor spatial ID nor among covariates. this column was removed from data.\n".format(
+                        column))
+    # sort base on spatial > temporal ids
+    data.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
+    # make data continous (contain all temporal id in each temporal covariates) ** add a new column and make that 1 if this row is new
+    data["new_row"] = 0
+    grouped_data_spatial = data.groupby("spatial ID")
+    missed_temporal_ids_data = pd.DataFrame()
+    for name_of_group, contents_of_group in grouped_data_spatial:
+        for temporal_id in range(min(contents_of_group["temporal ID"]) - 1,
+                                 max(contents_of_group["temporal ID"] + forecast_horizon + 1)):
+            if temporal_id not in list(contents_of_group["temporal ID"]):
+                new_row = pd.DataFrame()
+                for column in contents_of_group:
+                    if column == "temporal ID":
+                        new_row[column] = [temporal_id]
+                    elif column == "spatial ID":
+                        new_row[column] = [name_of_group]
+                    elif column == "new_row":
+                        new_row[column] = [1]
+                    else:
+                        new_row[column] = NaN
+                missed_temporal_ids_data = pd.concat([missed_temporal_ids_data, new_row]).reset_index(drop=True)
+    data = pd.concat([missed_temporal_ids_data, data]).reset_index()
+    data.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
+    data.drop("index", inplace=True, axis=1)
 
+    # target is a temporal covariate too
     temp_data = pd.DataFrame()
+    data2 = pd.DataFrame()
     target_data = pd.DataFrame()
 
-    for temporal_covar, temporal_covar_his_len in history_length_dict.items():
-        for i in range(temporal_covar_his_len):
-            if i == 0:
-                col_name = temporal_covar + " t"
-                temp_data[col_name] = data[temporal_covar]
-                data.drop(temporal_covar, inplace=True, axis=1)
-            else:
-                col_name = temporal_covar + " t-" + str(i)
-                temp_data[col_name] = temp_data[temporal_covar + " t"].shift(i).copy()
-    data = data.join(temp_data)
+    grouped_continous_data = data.groupby("spatial ID")
+    for name_of_group, contents_of_group in grouped_continous_data:
+        temp_group = pd.DataFrame()
+        for temporal_covar, temporal_covar_his_len in history_length_dict.items():
+            for i in range(temporal_covar_his_len):
+                temp_data = contents_of_group
+                if i == 0:
+                    col_name = temporal_covar + " t"
+                    temp_group[col_name] = contents_of_group[temporal_covar]
+                    contents_of_group.drop(temporal_covar, inplace=True, axis=1)
+                else:
+                    col_name = temporal_covar + " t-" + str(i)
+                    temp_group[col_name] = temp_group[temporal_covar + " t"].shift(i).copy()
+                temp_data = temp_data.join(temp_group)
 
-    # forecast_horizon
-    if type(forecast_horizon) != int:
-        raise TypeError("forecast_horizon must be of type int.\n")
-    if forecast_horizon < 0:
-        raise ValueError("forecast_horizon must be a positive number.\n")
-    if forecast_horizon == 0:
-        target_data["target t"] = data["target"].copy()
-    else:
-        col_name = "target t+" + str(forecast_horizon)
-        target_data[col_name] = data["target"].shift(-forecast_horizon).copy()
-    data.drop("target", inplace=True, axis=1)
-    data = data.join(target_data)
+        data2 = pd.concat([temp_data, data2]).reset_index()
+        data2.drop("index", inplace=True, axis=1)
+        data2.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
+        # forecast_horizon:
+        target_group = pd.DataFrame()
+        if type(forecast_horizon) != int:
+            raise TypeError("forecast_horizon must be of type int.\n")
+        if forecast_horizon < 0:
+            raise ValueError("forecast_horizon must be a positive number.\n")
+        if forecast_horizon == 0:
+            target_group["target t"] = contents_of_group["target"].copy()
+        else:
+            col_name = "target t+" + str(forecast_horizon)
+            target_group[col_name] = contents_of_group["target"].shift(-forecast_horizon).copy()
+        contents_of_group.drop("target", inplace=True, axis=1)
+        target_data = pd.concat([target_data, target_group]).reset_index()
+        target_data.drop("index", inplace=True, axis=1)
+    data2[col_name] = target_data[col_name]
 
-
-
+    # sort, remove new_row = 1 rows
+    data2 = data2[data2.new_row != 1]
+    data2.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
+    data2.drop("new_row", inplace=True, axis=1)
+    data2.drop("target", inplace=True, axis=1)
+    data = data2
     return data
