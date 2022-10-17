@@ -49,14 +49,16 @@ def rename_columns(data, column_identifier):
                 data.rename(columns={column_identifier["target"]: "target"}, inplace=True)
 
         if ("temporal covariates" not in column_identifier) or (len(column_identifier["temporal covariates"]) == 0):
-            raise ValueError("At least one temporal covariate must be specified in column identifier")
-
-        if len(list(set(column_identifier["temporal covariates"]) & set(column_identifier["spatial covariates"]))) > 0:
-            raise ValueError("A covariate can not be in both temporal covariates and spatial covariates")
-
-        if (column_identifier["target"] in column_identifier["temporal covariates"]) or (
+            raise ValueError("At least one temporal covariate must be specified in column identifier.\n")
+        if "spatail covariates" in column_identifier:
+            if len(list(set(column_identifier["temporal covariates"]) & set(column_identifier["spatial covariates"]))) > 0:
+                raise ValueError("A covariate can not be in both temporal covariates and spatial covariates")
+            if (column_identifier["target"] in column_identifier["temporal covariates"]) or (
                 column_identifier["target"] in column_identifier["spatial covariates"]):
-            raise ValueError("target should not be in temporal covariates or spataial covariates")
+                raise ValueError("target should not be in temporal covariates or spataial covariates.\n")
+        else:
+            if (column_identifier["target"] in column_identifier["temporal covariates"]):
+                raise ValueError("target should not be in temporal covariates.")
 
     elif column_identifier is not None:
         raise TypeError("The column_identifier must be of type dict")
@@ -87,7 +89,7 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
     if type(column_identifier["temporal covariates"]) != list:
         raise TypeError("temporal covariates should be specified in column identifier in a list.\n")
         # check vaidity of spatail covariates
-    if "spatial covariates" in data:
+    if "spatial covariates" in column_identifier:
         if type(column_identifier["spatial covariates"]) != list:
             raise TypeError("spatail covariates should be specified in column identifier in a list.\n")
         for spatial_covar in column_identifier["spatial covariates"]:
@@ -144,8 +146,10 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
 
     # list of each aggregation_mode in case of dict:
     covariate_names = list(filter(lambda x: not x.startswith(('temporal ID', 'spatial ID')), data.columns))
-
-    spatial_covariates = [spatial_covar for spatial_covar in column_identifier["spatial covariates"]]
+    if "spatial covariates" in column_identifier:
+        spatial_covariates = [spatial_covar for spatial_covar in column_identifier["spatial covariates"]]
+    else:
+        spatial_covariates=[]
     mean_data = pd.DataFrame()
     max_data = pd.DataFrame()
     min_data = pd.DataFrame()
