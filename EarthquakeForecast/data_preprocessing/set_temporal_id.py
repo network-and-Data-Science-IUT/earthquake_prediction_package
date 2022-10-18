@@ -70,9 +70,12 @@ def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifi
         elif all(data["temporal ID"].apply(validate_date, args=["%Y-%m-%d"])):
             data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%Y-%m-%d")
             if unit in ["second", "minute", "hour"]:
-                raise ValueError("This format of temporal ID in data, could not be scaled with units smaller than day")
+                raise ValueError("This format of temporal ID in data, could not be scaled with units smaller than day.\n")
         else:
             raise ValueError("format of temporal ID is not among acceptable foramts of date.\n")
+        #sort data (negative temporal ID bug)
+        data.sort_values(by="temporal ID", inplace=True)
+
 
     # unit
     if type(unit) != str:
@@ -104,14 +107,14 @@ def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifi
 
     # sort data
     if pd.api.types.is_datetime64_dtype(data["temporal ID"].dtype):
-        data.sort_values(by="temporal ID")
+        data.sort_values(by="temporal ID", inplace=True)
         data["temporal ID"].dt
 
         # to milliseconds
         data["miliseconds"] = data["temporal ID"].astype(int)
         data["miliseconds"] = data["miliseconds"].div(1000000).astype(int)
 
-    first_id = data["temporal ID"][0]
+    first_id = data["temporal ID"].min()
     # unit == second
     if unit == "second":
         data["Temporal ID"] = (((data["miliseconds"] - data["miliseconds"][0]) // 1000) // step) + 1
