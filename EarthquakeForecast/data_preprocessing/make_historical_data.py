@@ -1,8 +1,26 @@
 import pandas as pd
+import numpy as np
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
+from numpy import NaN
 
+
+import configurations
+
+'''
+Transforming data to the historical format and extract features. This subprocess prepare the final data frame including features and target variable for modeling.
+
+The set of features is consisted of:
+
+1. Spatial covariates, temporal covariates at current temporal unit (t)
+
+2. Historical values of these covariates at h-1(where h is history length) previous temporal units (t-1 , t-2 , … , t-h+1).
+
+3. The covariates of the L-layer pixels(where L is layer_number L = (0,1,…,maximum_layer_number)) at ‘history_length_of_neighbors’-1 previous temporal units(t-1 , t-2 , … , t-‘history_length_of_neighbors’+1)
+
+The target of the final data frame is the values of the target variable at the temporal unit t+r.
+'''
 
 # renaming the columns to formal format
 def rename_columns(data, column_identifier):
@@ -80,10 +98,29 @@ def rename_columns(data, column_identifier):
     return data
 
 
-from numpy import NaN
+import networkx as nx
+def find_neighbors(layer_number, neighbours_dictionary, spatial_id):
+    graph_pairs = []
+    for node, neighbors_list in neighbours_dictionary.items():
+        for neighbor in neighbors_list:
+            if ((node, neighbor) not in graph_pairs) and ((neighbor, node) not in graph_pairs):
+                graph_pairs.append((node, neighbor))
+
+    G = nx.Graph()
+    G.add_edges_from(graph_pairs)
+    path_length = nx.single_source_shortest_path_length(G, spatial_id)
+    list_of_neighbors = []
+
+    for node, length in path_length.items():
+        if length == layer_number:
+            list_of_neighbors.append(node)
+
+    return list_of_neighbors
 
 
-def make_historical_data(data, forecast_horizon, history_length=1, column_identifier=None):
+def make_historical_data(data, forecast_horizon, history_length=1, column_identifier=None,
+                         layer_number=0, aggregate_layer=True, neighboring_covariates=None, neighbours_dictionary=None,
+                         aggregation_mode="mean", history_of_layers=False):
     # check validity:
     # data:
     if type(data) == str:
@@ -110,7 +147,7 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
         raise TypeError("column_identifier must be of type dict.\n")
     if "target" in data:
         target_as_temporal_covar = data["target"]
-        target_as_temporal_covar_name = "target*"
+        target_as_temporal_covar_name = "*target"
     elif "target" in column_identifier:
         target_as_temporal_covar = data[column_identifier["target"]]
         target_as_temporal_covar_name = column_identifier["target"]
@@ -199,17 +236,18 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
         for temporal_id in range(min(contents_of_group["temporal ID"]) - 1,
                                  max(contents_of_group["temporal ID"] + forecast_horizon + 1)):
             if temporal_id not in list(contents_of_group["temporal ID"]):
-                new_row = pd.DataFrame()
-                for column in contents_of_group:
-                    if column == "temporal ID":
-                        new_row[column] = [temporal_id]
-                    elif column == "spatial ID":
-                        new_row[column] = [name_of_group]
-                    elif column == "new_row":
-                        new_row[column] = [1]
-                    else:
-                        new_row[column] = NaN
-                missed_temporal_ids_data = pd.concat([missed_temporal_ids_data, new_row]).reset_index(drop=True)
+                if temporal_id > 0:
+                    new_row = pd.DataFrame()
+                    for column in contents_of_group:
+                        if column == "temporal ID":
+                            new_row[column] = [temporal_id]
+                        elif column == "spatial ID":
+                            new_row[column] = [name_of_group]
+                        elif column == "new_row":
+                            new_row[column] = [1]
+                        else:
+                            new_row[column] = NaN
+                    missed_temporal_ids_data = pd.concat([missed_temporal_ids_data, new_row]).reset_index(drop=True)
     data = pd.concat([missed_temporal_ids_data, data]).reset_index()
     data.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
     data.drop("index", inplace=True, axis=1)
@@ -252,6 +290,132 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
         target_data = pd.concat([target_data, target_group]).reset_index()
         target_data.drop("index", inplace=True, axis=1)
     data2[col_name] = target_data[col_name]
+
+    # spatial historical data
+    # sort
+    data2.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
+    # check validity
+    # layer_number
+    if type(layer_number) != int:
+        raise TypeError("The layer_nmber must be of type int.\n")
+    if layer_number < 0:
+        raise ValueError("The layer_number must be a none negative number.\n")
+    # aggregate_layer
+    if type(aggregate_layer) != bool:
+        raise TypeError("The aggregate_layer must be of type bool.\n")
+    # neighbours_dictionary
+    if type(neighbours_dictionary) != dict:
+        raise TypeError("The neighbours_dictionary must be of type dict.\n")
+    for key, value in neighbours_dictionary.items():
+        if type(key) != int:
+            raise TypeError("neighbours_dictionary keys must be spatial IDs and of type int.\n")
+        if type(value) != list:
+            raise TypeError("neighbours_dictionary values must be list of integers.\n")
+        for item in value:
+            if type(item) != int:
+                raise TypeError("neighbours_dictionary must contian list of int as spatial IDs.\n")
+            if item not in set(neighbours_dictionary.keys()):
+                raise ValueError("{} is not specified in neighbours_dictionary.\n".format(item))
+            if key not in set(neighbours_dictionary[item]):
+                raise ValueError(
+                    "{} is among {}'s neighbours but {} is not in {}'s neighbours list.\n".format(item, key, key, item))
+            if item not in data["spatial ID"].tolist():
+                raise ValueError("{} is not among data's spatial IDs.\n".format(item))
+        if key not in data["spatial ID"].tolist():
+            raise ValueError("{} is not among data's spatial IDs.\n".format(key))
+    # neighboring_covariates
+    if type(neighboring_covariates) == list:
+        for covar in neighboring_covariates:
+            if type(covar) != str:
+                raise TypeError("neighboring_covariates must be a list of strings.\n")
+            if covar not in data:
+                print(
+                    "Warning: There is no column with name *{}* in data after renaming columns using column identifier. This item dropped form neighboring_covariates list.\n".format(
+                        covar))
+                neighboring_covariates.remove(covar)
+            # replce target with *target in case of covariate
+            if covar == 'target':
+                neighboring_covariates = list(map(lambda x: x.replace('target', '*target'), neighboring_covariates))
+            if covar == 'spatial ID' or covar == 'temporal ID':
+                print(
+                    "Warning: neighboring_covariates' items must be covariates specified in column identifier. {} dropped from this list.".format(
+                        covar))
+                neighboring_covariates.remove(covar)
+
+    elif neighboring_covariates != None:
+        raise TypeError("neighboring_covariates must be of type list.\n")
+    # aggregation_mode
+    if type(aggregation_mode) != str:
+        raise TypeError("The aggregation_mode must be of type str.\n")
+    if aggregation_mode not in TEMPORAL_HISTORICAL_AGGREGATION_MODES:
+        raise ValueError("The aggregation_mode must be among these options: [mean, max, min, sum, std]\n")
+    # raise error in case of empty or none neighboring covariates and layer number>0
+    # make data continous for all temporal IDs
+    grouped_data_spatial = data2.groupby("spatial ID")
+    missed_temporal_ids_data = pd.DataFrame()
+    min_temporal_id = data2["temporal ID"].min()
+    max_temporal_id = data2["temporal ID"].max()
+
+    for name_of_group, contents_of_group in grouped_data_spatial:
+        for temporal_id in range(1, max_temporal_id + forecast_horizon + 1):
+            if temporal_id not in list(contents_of_group["temporal ID"]):
+                new_row = pd.DataFrame()
+                for column in contents_of_group:
+                    if column == "temporal ID":
+                        new_row[column] = [temporal_id]
+                    elif column == "spatial ID":
+                        new_row[column] = [name_of_group]
+                    elif column == "new_row":
+                        new_row[column] = [1]
+                    else:
+                        new_row[column] = NaN
+                missed_temporal_ids_data = pd.concat([missed_temporal_ids_data, new_row]).reset_index(drop=True)
+    data2 = pd.concat([missed_temporal_ids_data, data]).reset_index()
+    data2.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
+    data2.drop("index", inplace=True, axis=1)
+
+    if neighbours_dictionary != None:
+        if history_of_layers == True:
+            filter_columns = []
+            for covar in neighboring_covariates:
+                filter_column = [col for col in data2 if col.startswith(covar)]
+                filter_columns.extend(filter_column)
+            for covar_col in data2[filter_columns]:
+                for layer in range(1, layer_number + 1):
+                    index = -1
+                    for spa_id in data2["spatial ID"]:
+                        index += 1
+                        tempo_id = data2["temporal ID"][index]
+                        neighbours_list = find_neighbors(layer, neighbours_dictionary, spa_id)
+                        neighbours_values_befor_agg = []
+                        for neighbour_id in neighbours_list:
+                            df = data2.loc[(data2["spatial ID"] == neighbour_id) & (data2["temporal ID"] == tempo_id)][
+                                covar_col]
+                            neighbours_values_befor_agg.append(df.tolist()[0])
+                        # aggregate
+                        if aggregation_mode == "mean":
+                            final_value = np.nanmean(neighbours_values_befor_agg)
+                        elif aggregation_mode == "min":
+                            final_value = np.nanmin(neighbours_values_befor_agg)
+                        elif aggregation_mode == "max":
+                            final_value = np.nanmax(neighbours_values_befor_agg)
+                        elif aggregation_mode == "sum":
+                            final_value = np.nansum(neighbours_values_befor_agg)
+                        elif aggregation_mode == "std":
+                            final_value = np.nanstd(neighbours_values_befor_agg)
+                        else:
+                            final_value = np.nanmean(neighbours_values_befor_agg)
+                        # make new column for each combination of layer and covariate
+                        data2["layer {} {}".format(layer, covar_col)] = NaN
+                        data2.at[index, "layer {} {}".format(layer, covar_col)] = final_value
+        # aggregate layers
+        if aggregate_layer == True:
+            print("todo")
+            # aggregate columns start with format layer (#layer numnber#) (covar x) to aggregated layers (covar x)
+        if history_of_layers == False:
+            # merge columns with format layer n ... t t-1  to layer n ...
+            # or remove all covarite exept ... t form filter
+            print("todo")
 
     # sort, remove new_row = 1 rows
     data2 = data2[data2.new_row != 1]
