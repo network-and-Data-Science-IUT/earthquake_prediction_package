@@ -11,19 +11,66 @@ with warnings.catch_warnings():
 import configuration
 
 
-
 # renaming the columns to formal format
 def rename_columns(data, column_identifier):
-  if type(column_identifier)==dict:
+  if type(column_identifier) == dict:
     if "temporal ID" not in data:
       if "temporal ID" not in list(column_identifier.keys()):
          raise ValueError("temporal ID is not specified in column_identifier.")
-      for key, value in column_identifier.items():
-        data.rename(columns = {value:key}, inplace = True)
-  elif column_identifier is not None:
-        raise TypeError("The column_identifier must be of type dict")
-  return data
 
+    for key, value in column_identifier.items():
+
+          if type(value) == str:
+              if value not in data:
+                raise ValueError("{} does not exist in data columns.\n".format(value))
+
+          if type (value) == list:
+              for i in value:
+                if i not in data:
+                 raise ValueError("{} does not exist in data columns.\n".format(i))
+
+          if key == "temporal ID":
+              continue
+          elif key == "spatial ID":
+              continue
+          elif key == "target":
+              continue
+          elif key == "temporal covariates":
+              continue
+          elif key == "spatial covariates":
+              continue
+          data.rename(columns={value: key}, inplace=True)
+
+    if "temporal ID" not in data:
+            if "temporal ID" not in list(column_identifier.keys()):
+                raise ValueError("temporal ID is not specified in column_identifier.")
+            else:
+                data.rename(columns={column_identifier["temporal ID"]: "temporal ID"}, inplace=True)
+    elif "temporal ID" in list(column_identifier.keys()):
+          print("Warning: temporal ID is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so temporal ID has been removed from column_identifier.\n")
+          column_identifier.pop("temporal ID")
+
+    if "spatial ID" not in data:
+         if "spatial ID" in list(column_identifier.keys()):
+              if column_identifier["spatial ID"] not in data:
+                raise ValueError("temporal ID and spatial ID should be unique columns.")
+              data.rename(columns={column_identifier["spatial ID"]: "spatial ID"}, inplace=True)
+    else:
+      if "spatial ID" in list(column_identifier.keys()):
+          print("Warning: spatial ID is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so spatail ID has been removed from column_identifier.\n")
+          column_identifier.pop("spatial ID")
+
+
+    if "target" in data:
+      if "target" in list(column_identifier.keys()):
+          print("Warning: target is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so target has been removed from column_identifier.\n")
+          column_identifier.pop("target")
+    else:
+      if "target" in list(column_identifier.keys()):
+        data.rename(columns={column_identifier["target"]: "target"}, inplace=True)
+
+
+  return data
 
 
 
@@ -36,8 +83,13 @@ def validate_date(date_text, date_format):
 
 
 def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifier=None):
+    '''
+    Label a group of samples with the same temporal ID according to the desired temporal unit and step.
+    Temporal ID identifies which time period a sample belongs to.
+    '''
     # check validity
     # data:
+
     if type(data) == str:
         data = pd.read_csv(data)
     elif type(data) != pd.DataFrame:
@@ -62,6 +114,7 @@ def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifi
 
     # check validity of temporal id level 1 of type str and convert to datetime
     if data["temporal ID"].dtype == object and isinstance(data.iloc[0]["temporal ID"], str):
+
         # %Y-%m-%dT%H:%M:%S.%fZ:
         if all(data["temporal ID"].apply(validate_date, args=["%Y-%m-%dT%H:%M:%S.%fZ"])):
             data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%Y-%m-%dT%H:%M:%S.%fZ")
@@ -70,18 +123,29 @@ def set_temporal_id(data, verbose=0, unit="temporal ID", step=1, column_identifi
         elif all(data["temporal ID"].apply(validate_date, args=["%Y-%m-%d"])):
             data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%Y-%m-%d")
             if unit in ["second", "minute", "hour"]:
-                raise ValueError("This format of temporal ID in data, could not be scaled with units smaller than day.\n")
+                raise ValueError(
+                    "This format of temporal ID in data, could not be scaled with units smaller than day.\n")
 
-        #"%m/%d/%Y  %H:%M:%S %p"
+        # "%m/%d/%Y  %H:%M:%S %p"
         elif all(data["temporal ID"].apply(validate_date, args=["%m/%d/%Y  %H:%M:%S %p"])):
-            data["temporal ID"] = pd.todatetime(data["temporal ID"], format= "%m/%d/%Y  %H:%M:%S %p")
+            data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%m/%d/%Y  %H:%M:%S %p")
 
+        # "%m/%d/%Y %H:%M:%S"
+        elif all(data["temporal ID"].apply(validate_date, args=["%m/%d/%Y %H:%M:%S"])):
+            data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%m/%d/%Y  %H:%M:%S")
+
+        # "%m-%d-%Y %H:%M:%S"
+        elif all(data["temporal ID"].apply(validate_date, args=["%m-%d-%Y %H:%M:%S"])):
+            data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%m-%d-%Y  %H:%M:%S")
+
+        # "%Y-%m-%d %H:%M:%S"
+        elif all(data["temporal ID"].apply(validate_date, args=["%Y-%m-%d %H:%M:%S"])):
+            data["temporal ID"] = pd.to_datetime(data["temporal ID"], format="%Y-%m-%d %H:%M:%S")
 
         else:
             raise ValueError("format of temporal ID is not among acceptable foramts of date.\n")
-        #sort data (negative temporal ID bug)
+        # sort data (negative temporal ID problem)
         data.sort_values(by="temporal ID", inplace=True)
-
 
     # unit
     if type(unit) != str:
