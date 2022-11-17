@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import warnings
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
 from numpy import NaN
-
+import re
 
 import configurations
 
@@ -22,12 +23,15 @@ The set of features is consisted of:
 The target of the final data frame is the values of the target variable at the temporal unit t+r.
 '''
 
-# renaming the columns to formal format
+
 # renaming the columns to formal format
 def rename_columns(data, column_identifier):
+    # type checking
     if type(column_identifier) != dict:
         raise TypeError("column_identifier must be of type dict.")
+
     else:
+        # column specified in column identifier to rename, doesn't exist in data columns
         for key, value in column_identifier.items():
             if type(value) == str:
                 if value not in data:
@@ -36,13 +40,12 @@ def rename_columns(data, column_identifier):
                 for i in value:
                     if i not in data:
                         raise ValueError("{} does not exist in data columns.\n".format(i))
+
             if key == "temporal ID":
                 continue
             elif key == "spatial ID":
                 continue
-            elif key == "Normal target":
-                continue
-            elif key.startswith("Target ("):
+            elif key == "target":
                 continue
             elif key == "temporal covariates":
                 continue
@@ -50,16 +53,20 @@ def rename_columns(data, column_identifier):
                 continue
             data.rename(columns={value: key}, inplace=True)
 
+        # temporal ID
         if "temporal ID" not in data:
             if "temporal ID" not in list(column_identifier.keys()):
                 raise ValueError("temporal ID is not specified in column_identifier.")
             else:
                 data.rename(columns={column_identifier["temporal ID"]: "temporal ID"}, inplace=True)
+
         elif "temporal ID" in list(column_identifier.keys()):
             print(
-                "Warning: temporal ID is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so temporal ID has been removed from column_identifier.\n")
+                "Warning: temporal ID is defined in both data columns and colum_identifier. data columns have higher "
+                "priority than column_identifier, so temporal ID has been removed from column_identifier.\n")
             column_identifier.pop("temporal ID")
 
+        # spatial ID
         if "spatial ID" not in data:
             if "spatial ID" not in list(column_identifier.keys()):
                 raise ValueError("spatial ID is not specified in column_identifier.")
@@ -67,51 +74,67 @@ def rename_columns(data, column_identifier):
                 if column_identifier["spatial ID"] not in data:
                     raise ValueError("temporal ID and spatial ID should be unique columns.")
                 data.rename(columns={column_identifier["spatial ID"]: "spatial ID"}, inplace=True)
+
         elif "spatial ID" in list(column_identifier.keys()):
             print(
-                "Warning: spatial ID is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so spatail ID has been removed from column_identifier.\n")
+                "Warning: spatial ID is defined in both data columns and colum_identifier. data columns have higher "
+                "priority than column_identifier, so spatial ID has been removed from column_identifier.\n")
             column_identifier.pop("spatial ID")
 
-        if "Normal target" not in data:
-            if "Normal target" not in list(column_identifier.keys()):
-                raise ValueError("Normal target is not specified in column_identifier.")
+        # target
+        # absence of "Normal target" and "Target (...)" in data columns
+        if "Normal target" not in data or not any(bool(re.search("Target \(.*?\)", col)) for col in data.columns):
+            if "target" not in list(column_identifier.keys()):
+                raise ValueError("target is not specified in column_identifier.")
             else:
-                if column_identifier["Normal target"] not in data:
+                if column_identifier["target"] not in data:
                     raise ValueError("Normal target should be an unique column.")
-                data.rename(columns={column_identifier["Normal target"]: "Normal target"}, inplace=True)
-        elif "Normal target" in list(column_identifier.keys()):
+
+                # create "Normal target" and "Target (normal)" from target using column identifier
+                data.rename(columns={column_identifier["target"]: "Normal target"}, inplace=True)
+                data["Target (normal)"] = data["Normal target"]
+
+        elif "target" in list(column_identifier.keys()):
             print(
-                "Warning: Normal target is defined in both data columns and colum_identifier. data columns have higher priority than column_identifier, so Normal target has been removed from column_identifier.\n")
+                "Warning: \"Normal target\" and \"Target (...)\" exist in data columns and target is defined in "
+                "colum_identifier.\ndata columns have higher priority than column_identifier, so target has been "
+                "removed from column_identifier.\n")
             column_identifier.pop("Normal target")
 
-        if not (("Target (normal)" in data) or ("Target (cumulative)" in data) or ("Target (differential)" in data) or (
-                "Target (movin average)" in data)):
-            raise ValueError("There is no modified target in data.\n")
+        # temporal covariates
+        if "temporal covariates" not in column_identifier:
+            raise ValueError("At least one temporal covariate must be specified in column identifier.\n")
 
-        if ("temporal covariates" not in column_identifier):
-            raise ValueError("At least one temporal covariate must be specified in column identifier")
-        elif (len(column_identifier["temporal covariates"]) == 0):
-            raise ValueError("At least one temporal covariate must be specified in column identifier")
+        elif len(column_identifier["temporal covariates"]) == 0:
+            raise ValueError("At least one temporal covariate must be specified in column identifier.\n")
+
         for item in column_identifier["temporal covariates"]:
             if item in column_identifier.values():
                 raise ValueError("temporal covariates should be unique columns.\n")
+
+        # spatial covariates
         if "spatial covariates" in column_identifier:
             if len(list(
                     set(column_identifier["temporal covariates"]) & set(column_identifier["spatial covariates"]))) > 0:
-                raise ValueError("A covariate can not be in both temporal covariates and spatial covariates")
-        if "spatail covariates" in column_identifier:
-            if "Normal target" in column_identifier:
-                if (column_identifier["Normal target"] in column_identifier["temporal covariates"]) or (
-                        column_identifier["Normal target"] in column_identifier["spatial covariates"]):
-                    raise ValueError("Normal target should not be in temporal covariates or spataial covariates")
+                raise ValueError("A covariate can not be in both temporal covariates and spatial covariates.\n")
+
+        # We have internally treated the target as a temporal covariate and the user is not allowed to do so
+        if "spatial covariates" in column_identifier:
+            if "target" in column_identifier:
+                if (column_identifier["target"] in column_identifier["temporal covariates"]) or (
+                        column_identifier["target"] in column_identifier["spatial covariates"]):
+                    raise ValueError("target should not be in temporal covariates or spataial covariates.\n")
+
         else:
-            if "Normal target" in column_identifier:
-                if (column_identifier["Normal target"] in column_identifier["temporal covariates"]):
-                    raise ValueError("Normal target should not be in temporal or spataial covariates")
+            if "target" in column_identifier:
+                if column_identifier["target"] in column_identifier["temporal covariates"]:
+                    raise ValueError("target should not be in temporal or spataial covariates.\n")
     return data
 
 
 import networkx as nx
+
+
 def find_neighbors(layer_number, neighbours_dictionary, spatial_id):
     graph_pairs = []
     for node, neighbors_list in neighbours_dictionary.items():
@@ -131,75 +154,113 @@ def find_neighbors(layer_number, neighbours_dictionary, spatial_id):
     return list_of_neighbors
 
 
-def make_historical_data(data, forecast_horizon, history_length=1, column_identifier=None,
+def make_historical_data(data, column_identifier, forecast_horizon, history_length=1,
                          layer_number=0, aggregate_layer=True, neighboring_covariates=None, neighbours_dictionary=None,
                          aggregation_mode="mean", history_of_layers=False):
+    """
+    Make data historical in both temporal and spatial aspects
+    so that output data is proper for the model.
+    Remained columns after this function are the only necessary ones.
+    """
+
     # check validity:
+
     # data:
     if type(data) == str:
         data = pd.read_csv(data)
+
     elif type(data) != pd.DataFrame:
         raise TypeError("The input data must be of type DataFrame or string.\n")
+
     if data.empty:
         raise ValueError("The input data is empty.\n")
+
     # history_length:
     if type(history_length) == dict:
         for value in history_length.values():
             if type(value) != int:
                 raise TypeError("The history_length of each covariate must be of type int.\n")
-            else:
-                if value <= 0:
-                    raise ValueError("history_length should be a positive integer.\n")
+            elif value <= 0:
+                raise ValueError("history_length should be a positive integer.\n")
+
     elif type(history_length) == int:
         if history_length <= 0:
             raise ValueError("history_length sholud be a positive integer.\n")
     else:
         raise TypeError("The history_length must be of type int or dict.\n")
+
     # column_identifier
     if type(column_identifier) != dict:
         raise TypeError("column_identifier must be of type dict.\n")
-    if "Normal target" in data:
+        # column identifier is required to specify at least one temporal covariate
+
+    # target meant to be among temporal covariates and become historical.
+    # since the columns' name in input data has more priority than column identifier,
+    # if both "Normal target" and "Target (...)" were among columns of data,
+    # we add a column name "*Normal target" with the same content as "Normal target"
+    # to temporal covariates' list, otherwise we produce "Normal target" and "target (normal)"
+    # based on column identifier which specifies the "target" column in data.
+    # In this case, the original column remains in data and will be added to the temporal covariates' list.
+
+    # presence of "Noraml target" and "Target (...)" in data
+    if "Normal target" in data and any(bool(re.search("Target \(.*?\)", col)) for col in data.columns):
         target_as_temporal_covar = data["Normal target"]
         target_as_temporal_covar_name = "*Normal target"
-    elif "Normal target" in column_identifier:
-        target_as_temporal_covar = data[column_identifier["Normal target"]]
-        target_as_temporal_covar_name = column_identifier["Normal target"]
+
+    # target in column identifier
+    elif "target" in column_identifier:
+        target_as_temporal_covar = data[column_identifier["target"]]
+        target_as_temporal_covar_name = column_identifier["target"]
+
+    # absence of target in data and column identifier
     else:
-        raise ValueError("The Normal target column must be specified in data or column_identifier.\n")
+        raise ValueError("The target column must be specified in column identifier.\n")
+
+    # rename columns
     data = rename_columns(data.copy(), column_identifier)
+
     # column_identifier validity
     if "temporal covariates" not in column_identifier:
-        raise ValueError("temporal covariates are not specified in column identifier\n")
+        raise ValueError("temporal covariates are not specified in column identifier.\n")
 
     # check validity of temporal covariates
     if type(column_identifier["temporal covariates"]) != list:
         raise TypeError("temporal covariates should be specified in column identifier in a list.\n")
-        # check vaidity of spatail covariates
+
+    # check validity of spatial covariates
     if "spatial covariates" in column_identifier:
+
         if type(column_identifier["spatial covariates"]) != list:
-            raise TypeError("spatail covariates should be specified in column identifier in a list.\n")
+            raise TypeError("spatial covariates should be specified in column identifier in a list.\n")
+
         for spatial_covar in column_identifier["spatial covariates"]:
             grouped_data = data.groupby("spatial ID")
             for name_of_group, contents_of_group in grouped_data:
                 spatial_covar_list_in_group = contents_of_group[spatial_covar].tolist()
                 if not (spatial_covar_list_in_group.count(spatial_covar_list_in_group[0]) == len(
                         spatial_covar_list_in_group)):
-                    raise ValueError("contents of spatial covariates, should not change in diffrent temporal IDs")
+                    raise ValueError("contents of spatial covariates, should not change in different temporal IDs.\n")
+
     # check if data contains any types other than int or float
     int_or_float_data = data.select_dtypes(include=['float64', 'int64'])
     if not int_or_float_data.equals(data):
         print(
-            "Warning: It's not possible to aggregate columns containing types other than int or float. these columns were removed during the aggregation process.\n")
+            "Warning: It's not possible to work with columns containing types other than int or float. these columns "
+            "were removed during the making historical process.\n")
         data = int_or_float_data
+
     # temporal covariates and spatial covariates list:
     if 'spatial covariates' in column_identifier.keys():
         spatial_covariates = [item for item in list(column_identifier['spatial covariates']) if item in data.columns]
     else:
         spatial_covariates = []
     temporal_covariates = [item for item in list(column_identifier['temporal covariates']) if item in data.columns]
-    # add content of target column befor renaming to data and temporal covariates
+
+    # add content of target column before renaming to data and temporal covariates
     data[target_as_temporal_covar_name] = target_as_temporal_covar
     temporal_covariates.append(target_as_temporal_covar_name)
+
+    # MAKE TEMPORAL HISTORICAL
     if type(history_length) == int:
         history_length_dict = {covar: history_length for covar in temporal_covariates}
 
@@ -210,16 +271,18 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
             if item not in history_length_dict.keys():
                 history_length_dict[item] = 1
                 print(
-                    "Warning: history_length of {} which is a temporal covariate, is not specified in dictionary of history_length. 1 as default history_length applied for that.\n".format(
+                    "Warning: history_length of {} which is a temporal covariate, is not specified in dictionary of "
+                    "history_length. 1 as default history_length applied for that.\n".format(
                         item))
 
         # history length should contain nothing other than temporal covariates
         for item in list(history_length_dict):
             if item not in temporal_covariates:
                 print(
-                    "Warning: {} is not a temporal  covariate, and history_length can not be applied for that.\n".format(
+                    "Warning: {} is not a temporal covariate, and history_length can not be applied for that.\n".format(
                         item))
                 del history_length_dict[item]
+
     else:
         raise TypeError("history_length must be of type int or dict.\n")
 
@@ -229,7 +292,8 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
             raise TypeError(
                 "The specified history length for each covariate in the history_length dict must be of type int.\n")
         if history_length_dict[covar] <= 0:
-            raise ValueError("history_length must be a positive number")
+            raise ValueError("history_length must be a positive number.\n")
+
     # prepare data
     # remove columns other than temporal and spatial ids, target , temporal and spatial covariates
     for column in data:
@@ -238,11 +302,15 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
             if column not in (spatial_covariates + temporal_covariates):
                 data.drop(column, inplace=True, axis=1)
                 print(
-                    "Warning: {} is neither target nor temporal ID nor spatial ID nor among covariates. this column was removed from data.\n".format(
+                    "Warning: {} is neither target nor temporal ID nor spatial ID nor among covariates. this column "
+                    "was removed from data.\n".format(
                         column))
-    # sort base on spatial > temporal ids
+
+    # sort base on spatial id and temporal ids
     data.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
-    # make data continous (contain all temporal id in each temporal covariates) ** add a new column and make that 1 if this row is new
+
+    # make data continous (contain all temporal id in each temporal covariates) ** add a new column and make that 1
+    # if this row is new
     data["new_row"] = 0
     grouped_data_spatial = data.groupby("spatial ID")
     missed_temporal_ids_data = pd.DataFrame()
@@ -261,18 +329,20 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
                             new_row[column] = [1]
                         else:
                             new_row[column] = NaN
+
                     missed_temporal_ids_data = pd.concat([missed_temporal_ids_data, new_row]).reset_index(drop=True)
+
     data = pd.concat([missed_temporal_ids_data, data]).reset_index()
     data.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
     data.drop("index", inplace=True, axis=1)
 
-    # target is a temporal covariate too
+    # history_length
     temp_data = pd.DataFrame()
     data2 = pd.DataFrame()
     target_data = pd.DataFrame()
 
-    grouped_continous_data = data.groupby("spatial ID")
-    for name_of_group, contents_of_group in grouped_continous_data:
+    grouped_continuous_data = data.groupby('spatial ID')
+    for name_of_group, contents_of_group in grouped_continuous_data:
         temp_group = pd.DataFrame()
         for temporal_covar, temporal_covar_his_len in history_length_dict.items():
             for i in range(temporal_covar_his_len):
@@ -289,29 +359,40 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
         data2 = pd.concat([temp_data, data2]).reset_index()
         data2.drop("index", inplace=True, axis=1)
         data2.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
+
         # forecast_horizon:
         target_group = pd.DataFrame()
         if type(forecast_horizon) != int:
             raise TypeError("forecast_horizon must be of type int.\n")
         if forecast_horizon < 0:
             raise ValueError("forecast_horizon must be a positive number.\n")
+        for col in contents_of_group:
+            if bool(re.search("Target \(.*?\)", col)):
+                name_of_modified_target = col
         if forecast_horizon == 0:
             target_group["Normal target"] = contents_of_group["Normal target"].copy()
+            target_group[name_of_modified_target] = contents_of_group[name_of_modified_target].copy()
         else:
             col_name = "Normal target"
             target_group[col_name] = contents_of_group["Normal target"].shift(-forecast_horizon).copy()
+            target_group[name_of_modified_target] = contents_of_group[name_of_modified_target].shift(
+                -forecast_horizon).copy()
         contents_of_group.drop("Normal target", inplace=True, axis=1)
+        contents_of_group.drop(name_of_modified_target, inplace=True, axis=1)
+
         target_data = pd.concat([target_data, target_group]).reset_index()
         target_data.drop("index", inplace=True, axis=1)
     data2[col_name] = target_data[col_name]
+    data2[name_of_modified_target] = target_data[name_of_modified_target]
 
-    # spatial historical data
+    # MAKE SPATIAL HISTORICAL
+
     # sort
     data2.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
     # check validity
     # layer_number
     if type(layer_number) != int:
-        raise TypeError("The layer_nmber must be of type int.\n")
+        raise TypeError("The layer_number must be of type int.\n")
     if layer_number < 0:
         raise ValueError("The layer_number must be a none negative number.\n")
     # aggregate_layer
@@ -327,7 +408,7 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
             raise TypeError("neighbours_dictionary values must be list of integers.\n")
         for item in value:
             if type(item) != int:
-                raise TypeError("neighbours_dictionary must contian list of int as spatial IDs.\n")
+                raise TypeError("neighbours_dictionary must contain list of int as spatial IDs.\n")
             if item not in set(neighbours_dictionary.keys()):
                 raise ValueError("{} is not specified in neighbours_dictionary.\n".format(item))
             if key not in set(neighbours_dictionary[item]):
@@ -344,25 +425,27 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
                 raise TypeError("neighboring_covariates must be a list of strings.\n")
             if covar not in data:
                 print(
-                    "Warning: There is no column with name *{}* in data after renaming columns using column identifier. This item dropped form neighboring_covariates list.\n".format(
+                    "Warning: There is no column with name *{}* in data after renaming columns using column "
+                    "identifier. This item dropped form neighboring_covariates list.\n".format(
                         covar))
                 neighboring_covariates.remove(covar)
-            # replce target with *target in case of covariate
+            # replace target with *target in case of covariate
             if covar == 'Normal target':
                 neighboring_covariates = list(
                     map(lambda x: x.replace('Normal target', '*Normal target'), neighboring_covariates))
             if covar == 'spatial ID' or covar == 'temporal ID':
                 print(
-                    "Warning: neighboring_covariates' items must be covariates specified in column identifier. {} dropped from this list.".format(
+                    "Warning: neighboring_covariates' items must be covariates specified in column identifier. {} "
+                    "dropped from this list.".format(
                         covar))
                 neighboring_covariates.remove(covar)
 
-    elif neighboring_covariates != None:
+    elif neighboring_covariates is not None:
         raise TypeError("neighboring_covariates must be of type list.\n")
     # aggregation_mode
     if type(aggregation_mode) != str:
         raise TypeError("The aggregation_mode must be of type str.\n")
-    if aggregation_mode not in TEMPORAL_HISTORICAL_AGGREGATION_MODES:
+    if aggregation_mode not in configurations.neighbours_values_before_agg:
         raise ValueError("The aggregation_mode must be among these options: [mean, max, min, sum, std]\n")
     # raise error in case of empty or none neighboring covariates and layer number>0
     # make data continous for all temporal IDs
@@ -389,8 +472,8 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
     data2.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
     data2.drop("index", inplace=True, axis=1)
 
-    if neighbours_dictionary != None:
-        if history_of_layers == True:
+    if neighbours_dictionary is not None:
+        if history_of_layers:
             filter_columns = []
             for covar in neighboring_covariates:
                 filter_column = [col for col in data2 if col.startswith(covar)]
@@ -403,24 +486,24 @@ def make_historical_data(data, forecast_horizon, history_length=1, column_identi
                         index += 1
                         tempo_id = data2["temporal ID"][index]
                         neighbours_list = find_neighbors(layer, neighbours_dictionary, spa_id)
-                        neighbours_values_befor_agg = []
+                        neighbours_values_before_agg = []
                         for neighbour_id in neighbours_list:
                             df = data2.loc[(data2["spatial ID"] == neighbour_id) & (data2["temporal ID"] == tempo_id)][
                                 covar_col]
-                            neighbours_values_befor_agg.append(df.tolist()[0])
+                            neighbours_values_before_agg.append(df.tolist()[0])
                         # aggregate
                         if aggregation_mode == "mean":
-                            final_value = np.nanmean(neighbours_values_befor_agg)
+                            final_value = np.nanmean(neighbours_values_before_agg)
                         elif aggregation_mode == "min":
-                            final_value = np.nanmin(neighbours_values_befor_agg)
+                            final_value = np.nanmin(neighbours_values_before_agg)
                         elif aggregation_mode == "max":
-                            final_value = np.nanmax(neighbours_values_befor_agg)
+                            final_value = np.nanmax(neighbours_values_before_agg)
                         elif aggregation_mode == "sum":
-                            final_value = np.nansum(neighbours_values_befor_agg)
+                            final_value = np.nansum(neighbours_values_before_agg)
                         elif aggregation_mode == "std":
-                            final_value = np.nanstd(neighbours_values_befor_agg)
+                            final_value = np.nanstd(neighbours_values_before_agg)
                         else:
-                            final_value = np.nanmean(neighbours_values_befor_agg)
+                            final_value = np.nanmean(neighbours_values_before_agg)
                         # make new column for each combination of layer and covariate
                         data2["layer {} {}".format(layer, covar_col)] = NaN
                         data2.at[index, "layer {} {}".format(layer, covar_col)] = final_value
