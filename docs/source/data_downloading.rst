@@ -10,5 +10,6 @@ Data downloading module
 | The list of functions included in this module is as follows:
 
 .. toctree::
+   download_data
    :maxdepth: 3
 

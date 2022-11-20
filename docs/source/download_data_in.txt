@@ -1,0 +1,101 @@
+#,Input Name,Input Description
+"| 1
+| ","| time_interval
+| ","| **type:** list or tuple
+| **default:** -
+| **details:** 
+| it contains two strings the first string indicates the start time and the second
+| indicates the end time within earthquake events are downloaded.
+| Format of time strings:
+| YY-MM-DD
+| **examples:**
+| 1. ['2020-01-01','2021-02-02']
+|"
+"| 2
+| ","| save_dataframe
+| ","| **type:** bool
+| **default:** False
+| **details:** 
+| If true the downloaded data will be saved in the current directory
+| with the name 'earthquake_data.csv'.
+"
+"| 3
+| ","| magnitude_range
+| ","| **type:** list, tuple or None
+| **default:** None
+| **details:** 
+| it contains two elememts:
+| The first element is minimum magnitude range and the second element
+| is maximum magnitude range.
+| The first element limits to events with a magnitude larger than the specified 
+| minimum and the second element limits to events with a magnitude less than 
+| the specified maximum.
+| **examples:**
+| 1. [4.5, 8]
+"
+"| 4
+| ","| depth_range
+| ","| **type:** list, tuple or None
+| **default:** None
+| **details:** 
+| it contains two elememts:
+| The first element is minimum depth range and the second element
+| is maximum depth range.
+| The first element limits to events with a depth larger than the specified 
+| minimum and the second element limits to events with a depth less than 
+| the specified maximum.
+| **examples:**
+| 1. [50,10000]"
+"| 5
+| ","| data_center
+| ","| **type:** string
+| **default:** 'USGS'
+| **details:** 
+| the name of data center that the data will be downloaded from.
+| **options:**
+| 'USGS', 'ISC', 'IRIS'
+"
+"| 6
+| ","| rectangular_region
+| ","| **type:** list, tuple or None
+| **default:** None
+| **details:** 
+| it contains four elements: 
+| First element: “min-latitude”, Second element: “max-latitude”, 
+| Third element: “min-longitude”, Fourth element: “max-longitude”.
+| all events within the specified range of longitudes and latitudes
+| are downloaded.
+
+| **examples:**
+| 1. [20,25,40,60]"
+"| 7
+| ","| circular_region
+| ","| **type:** dict or None
+| **default:** None
+| **details:** 
+| the dictionary must contain the following keys:
+| *longitude*, *latitude*
+| if the data center is *USGS*:
+| *radius*
+| if the data center is *IRIS* or *ISC*:
+| *maxradius*, *minradius*
+| key explanation:
+| in order to specify the center of the area we need both its *longitude*
+| and *latitude*, so we get these values from the corresponding keys.
+| *radius* is the radius(kilometre) of the circule within the events are 
+| downloaded. 
+| *maxradius* limits the events within the maximum number of degrees 
+| from the center.
+| *minradius* limits the events within the minimum number of degrees from
+| the center.
+| 
+| **examples:**
+| 1.
+| {“longitude”: 40,
+| “latitude”:20,
+| “radius“:5000}
+| 2.
+| {“longitude”: 40,
+| “latitude”:20,
+| “maxradius“:20,
+| “minradius“:5}"
