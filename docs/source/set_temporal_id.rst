@@ -10,7 +10,7 @@ Temporal ID identifies which time period a sample belongs to.
 
 **Usage**
 
-.. py:function:: data_preprocessing.set_temporal_id(data, column_identifier=None, unit='temporal ID, step=1, verbose=0)
+.. py:function:: data_preprocessing.set_temporal_id(data, column_identifier=None, unit='temporal ID', step=1, verbose=0)
 
 
 **Parameters**
