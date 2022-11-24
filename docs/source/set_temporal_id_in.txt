@@ -3,23 +3,25 @@
 | ","| data 
 | ","| **type:** DataFrame or str
 | **default:** -
-| **details:**
-| a DataFrame or address of a DataFrame.
+| **details:** A DataFrame or address of a DataFrame.
 | The data includes the following column:
 | temporal ID:
 | The type of this column is one of below types:
-| 1. datetime object
-| 2. str (“YYYY-MM-DDTHH:mm:SS.fffZ”)
-| 3. str(“YYYY-MM-DD”)
-| 3. int (predefind temporal ID)
-| NOTE: if the time column name is not 'temporal ID',
-| it should be spedified in 'column_identifier'."
+| 1. str (“YYYY-MM-DDTHH:mm:SS.fffZ”)
+| 2. str(“YYYY-MM-DD”)
+| 3. str(“MM/DD/YYYY HH:mm:SS tt”)
+| 4. str(“MM/DD/YYYY HH:mm:SS”)
+| 5. str(“MM-DD-YYYY HH:mm:SS”)
+| 6. str(“YYYY-MM-DD HH:mm:SS”)
+| 7. int (predefined temporal ID)
+| NOTE: If there is no 'temporal ID' in data columns,
+| considering column with different name should be
+| defined in 'column_identifier'."
 "| 2
 | ","| column_identifier
 | ","| **type:** dict or None
 | **default:** None
-| **details:**
-| If the input data column names do not match the specific format 
+| **details:** If the input data column names do not match the specific format 
 | we expect, a dictionary must be passed to specify the content 
 | of each column.
 | in this function we only need 'temporal ID' column to be specified. 
@@ -29,25 +31,25 @@
 | ","| **type:** str
 | **default:** -
 | **options:**
-| ["second", "minute", "hour", "day", "week", "month", "year", "temporal ID"]
-| **details:**
-| "temporal ID" option is only valid in the case of temporal ID column
+| ['second', 'minute', 'hour', 'day', 'week', 'month', 'year', 'temporal ID']
+| **details:** 'temporal ID' option is only valid in the case of temporal ID column
 | of type int.
-| "second", "minute", "hour", "day", "week", "month", "year" are only
+| 'second', 'minute', 'hour', 'day', 'week', 'month', 'year' are only
 | valid in the case of temporal ID column as type datetime or str in
 | supported formats described in data.
 | The temporal unit should not be smaller than the measurement accuracy
 | of temporal ID column of date.
-"
+| ID number 1 indicates the smallest date, and other items are numbered
+| according to the specified unit and step, compared to the first temporal  ID."
 "| 4
 | ","| step
 | ","| **type:** int
 | **default:** 1
-| **details:** The temporl step to use in scaling, regarding the
+| **details:** The temporal step to use in scaling, regarding the
 | temporal unit.
-| **example:** If the unit is "day" and the step is 5,
+| **example:** If the unit is 'day' and the step is 5,
 | the difference between two consecutive IDs will be
-| greater than or equal to 5 5 days"
+| greater than or equal to 5 days."
 "| 5
 | ","| verbose
 | ","| **type:** int
@@ -56,4 +58,5 @@
 | available options:
 | 0: no logging
 | 1: only important information logging
-| 2: all details logging"
+| 2: all details logging
+|"

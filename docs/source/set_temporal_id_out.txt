@@ -1,6 +1,6 @@
 #,Output Name,Output Description
 "| 1
 | ","| temporal_scaled_dataframe
-| ","| **type:** data frame
-| **details:** a data frame containing ‘temporal ID’ column that
+| ","| **type:** DataFrame
+| **details:** A DataFrame containing ‘temporal ID’ column that
 | indicates which time scale interval a sample belongs to."

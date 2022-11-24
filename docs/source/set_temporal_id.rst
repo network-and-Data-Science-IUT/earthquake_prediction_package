@@ -1,22 +1,24 @@
 set_temporal_id
-======
+===============
 
 **Description**
 
-Label a group of samples with the same temporal ID according to the desired temporal unit and step.Temporal ID identifies which time period a sample belongs to.
+Label a group of samples with the same temporal ID 
+according to the desired temporal unit and step. 
+Temporal ID identifies which time period a sample belongs to.
 
 
 **Usage**
 
-.. py:function:: data_preprocessing.set_temporal_id(data,column_identifier=None,unit = 'temporal ID',step = 1,verbose = 0):
+.. py:function:: data_preprocessing.set_temporal_id(data, column_identifier=None, unit='temporal ID, step=1, verbose=0)
+
 
 **Parameters**
 
 .. csv-table::
    :header-rows: 1
    :widths: 1 , 3, 15
-   :file: set_temporal_id_in.txt
-
+   :file: set_temporal_id_in.txt 
 
 **Returns**
 
@@ -34,12 +36,4 @@ Label a group of samples with the same temporal ID according to the desired temp
    df = pd.read_csv('data.csv')
    set_temporal_id(data=df,column_identifier={'temporal ID':'time'},
    unit = 'month', step = 3)
-.. _target fig 4:
-   :align: center
-   :scale: 50 %
-   :width: 1000px
-   :height: 800px
-   :alt: imputation process
-
-   Imputation of missing values in temporal data
 
