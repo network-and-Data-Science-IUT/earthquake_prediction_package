@@ -7,7 +7,7 @@ If two or more samples have the same spatial id and temporal id, this function a
 
 **Usage**
 
-.. py:function:: data_preprocessing.aggregate(data,column_identifier=None,aggregation_mode='mean',verbose=0)
+.. py:function:: data_preprocessing.aggregate(data,column_identifier,aggregation_mode='mean', base=None, verbose=0)
 
 **Parameters**
 

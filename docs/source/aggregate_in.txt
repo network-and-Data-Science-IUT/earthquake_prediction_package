@@ -3,58 +3,31 @@
 | ","| data
 | ","| **type:** DataFrame or string
 | **default:** -
-| **details:** A DataFrame or a string as the address of a CSV file.
-| The *data* must include the following column with the names in
-| the specified format in the description, or if the column have
-| arbitrary names, their content must be specified using the 
-| *column_identifier* arguments.
+| **details:** The columns mentioned below must be present in the input data,
+| or their corresponding names must be specified in the column identifier.
 | 
-| Spatial ids:The id of the units in the finest spatial scale of input 
-| data must be included in the temporal_data in a column with the name
-| ‘spatial id level 1’.
-|
-| Temporal ids: The id of time units recorded in the input data for each
-| temporal scale must be included as a separate column in the 
-| temporal_data with the name in a format ‘temporal id level x’, where ‘x’
-| is the related temporal scale level beginning with level 1 for the
-| smallest scale. The temporal units could have a free but sortable
-| format like year number, week number and so on. The combination of
-| these temporal scale levels' ids should form a unique identifier.
-| However, the integrated foramt of data and time is also supported. In
-| the case of using integrated format, only the smallest temporal scale
-| must be included in the temporal_data with the column name of 
-| ‘temporal id’. The expected format of each scale is shown in Table 2."
+| *“spatial ID”* : A column containing positive integer values
+| ​​indicating the spatial ID corresponding to each event.
+| *“temporal ID”* : A column containing positive integer values
+| indicating the temporal ID corresponding to each event.
+| *“target”* : A column containing target values."
+
 "| 2
 | ","| column_identifier
-| ","| **type:** dict or None
-| **default:** None
-| **details:** If the input data column names, don’t match
-| the specified format we expect,
-| (i.e, “longitude”, “latitude”, “depth”, “temporal ID”, “magnitude”)
-| a dictionary must be passed to specify the content of each column.
-| In this case, user has to clarify the columns containing temporal and
-| spatial IDs and pass other columns which contain other covariates,
-| as lists of “temporal covariates” and “spatial covariates”.
-| The user must specify whether the longitude & latitude or 
-| spatial ID column.
-| The user must specify temporal ID column.
-| Specifying depth and magnitude is optional and is only necessary if user
-| wants to do 3D pixelating or extract some specified features.
-| **examples:**
-| 1.
-| {“temporal ID”: “time”
-| “spatial ID”: “city”,
-| “temporal covariates”: [“temperature”,”magnitude”] ,
-| “spatial covariates”: [“area”, “population”] ,
-| “target”: “magnitude”}
-| 2.
-| {“temporal ID level 1”: “day” ,
-| “temporal ID level 2” : “month”,
-| “temporal ID level 3” : “year”
-| “latitude”: “lat”,   “longitude”: “lon”,
-| “temporal covariates”: [“temperature”,”magnitude”] ,
-| “spatial covariates”: [“area”, “population”] ,
-| “target”: “magnitude”}"
+| ","| **type:** dict
+| **default:** -
+| **details:** The presence of this item is necessary to 
+| specify at least one temporal covariate value.
+| If the input data does not contain “target”, “spatial ID”, “temporal ID”,
+| these values ​​should be specified in the *column_identifier* too.
+| Presence of “spatial covariate” is arbitrary.
+| If there is any other identified column, the name will be replaced.
+| If any of the above-mentioned items exist in both column names of
+| the input *data* and *column_identifier*, the input data has a greater priority
+| and specified item in *column_identifier* will be ignored.
+| 
+| *“temporal covariate”* : A list containing the name of columns which
+| are temporal covariates."
 "| 3
 | ","| aggregation_mode
 | ","| **type:** dict or string
@@ -68,16 +41,29 @@
 | with the name of the method.
 | Format of dictionary:
 | { a temporal covariate (‘string’): aggregation method (‘str’)}
-| Options = [‘mean’, ‘max’, ‘min’, ‘std’, ‘sum’, ‘base_max’]
-| ‘base_max’: This option is only available in the case of dictionary.
-| If it is choosen for a covariate, the maximum value
-| of that covariate will be selected and in the case that other covariates 
-| has no aggregation_mode in the dictionary, the
+| Options = [‘mean’, ‘max’, ‘min’, ‘std’, ‘sum’, ‘mode’, ‘base_max’]
+| ‘base_max’: This option is only available in the case of srting
+| and the *“base”* input should specify the column name 
+| which will be considered as base.
+| If this aggregation_mode is choosen, the maximum value
+| of *base* column will be selected and other columns will contain
+| the values of that specific event.
 | value of other covariates in the same row will be selected.
+| All spatial covariates meant to be constant in each spatial ID,
+| so ‘sum’, ‘std’ are not valid for spatial covariates and ‘mean’ as 
+| default mode, will be applied for them.
 | **examples:**
-| 1. {‘target’:‘max’, ‘depth’:‘sum’, ‘magnitude’:‘base_max’}
-| 2. ‘max’"
+| 1. {‘target’:‘max’, ‘depth’:‘sum’, ‘magnitude’:‘mean’}
+| 2. ‘max’
+| 3. ‘base_max’ , base = ‘depth’"
 "| 4
+| ","| base
+| ","| **type:** string
+| **default:** None
+| **details:** This input is only needed and valid in the case of
+| *aggregation_mode* = “base_max” and should specify the name of the base column,
+| otherwise it should be *None*."
+"| 5
 | ","| verbose
 | ","| **type:** int
 | **default:** 0

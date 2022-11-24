@@ -65,7 +65,7 @@ def rename_columns(data, column_identifier):
     return data
 
 
-def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, verbose=0):
+def aggregate(data, column_identifier, aggregation_mode="mean", base=None, verbose=0):
     # check validity
 
     # data:
@@ -107,14 +107,15 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
     int_or_float_data = data.select_dtypes(include=['float64', 'int64'])
     if not int_or_float_data.equals(data):
         print(
-            "Warning: It's not possible to aggregate columns containing types other than int or float. these columns were removed during the aggregation process.\n")
+            "Warning: It's not possible to aggregate columns containing types other than int or float. these columns "
+            "were removed during the aggregation process.\n")
         data = int_or_float_data
     # check validity of base
     if aggregation_mode != "base_max":
-        if base != None:
+        if base is not None:
             raise ValueError("base is only available in the case of base_max as aggregation_mode.\n")
     else:
-        if base == None:
+        if base is None:
             raise ValueError("base should be specified in the case of base_max as aggregation_mode.\n")
         if type(base) != str:
             raise TypeError("Type of base should be str and specifies a column in data.\n")
@@ -136,7 +137,8 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
                 raise TypeError("aggregation_mode options should be of type str.\n")
             if aggr_mode not in configurations.AGGREGATION_MODE_OPTIONS:
                 raise ValueError(
-                    "The aggregation_mode must be among these options [mean , max , min , std , sum , base_max, mode].\n")
+                    "The aggregation_mode must be among these options [mean , max , min , std , sum , base_max, "
+                    "mode].\n")
             # change aggregation_mode base on column_identifier
             column_identifier_non_list_items = [a for a in column_identifier.items() if isinstance(a[1], str)]
             for k, v in column_identifier_non_list_items:
@@ -161,15 +163,16 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
     sum_data = pd.DataFrame()
     mode_data = pd.DataFrame()
     if type(aggregation_mode) == dict:
-
-        # spatail covariates should remain constant
+        # spatial covariates should remain constant
         for covar, operator in aggregation_mode.items():
-            if (operator == 'std' and (covar in spatial_covariates)):
+            if operator == 'std' and (covar in spatial_covariates):
                 print(
-                    "Warning: std is not available for spatial covariates. Spatial covariates remain constant during aggregation and mean as default method applies for them.\n")
-            if (operator == 'sum' and (covar in spatial_covariates)):
+                    "Warning: std is not available for spatial covariates. Spatial covariates remain constant during "
+                    "aggregation and mean as default method applies for them.\n")
+            if operator == 'sum' and (covar in spatial_covariates):
                 print(
-                    "Warning: sum is not available for spatial covariates. Spatial covariates remain constant during aggregation and mean as default method applies for them.\n")
+                    "Warning: sum is not available for spatial covariates. Spatial covariates remain constant during "
+                    "aggregation and mean as default method applies for them.\n")
 
         mean_covariates = [covar for covar, operator in aggregation_mode.items() if operator == 'mean']
         max_covariates = [covar for covar, operator in aggregation_mode.items() if operator == 'max']
@@ -189,7 +192,8 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
 
         if len(unspecified_covariates) > 0:
             print(
-                "Warning : The aggregation_mode is not specified for some of the covariates.\nThe mean operator will be used to aggregate these covariates' values.\n")
+                "Warning : The aggregation_mode is not specified for some of the covariates.\nThe mean operator will "
+                "be used to aggregate these covariates' values.\n")
             mean_covariates += unspecified_covariates
 
         # aggregation mode = mean in dict
@@ -253,7 +257,8 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
     if aggregation_mode == "std":
         if len(spatial_covariates) > 0:
             print(
-                "Warning: std aggregation mode is not available for spatial covariates. Spatial covariates remain constant during aggregation and mean as default method applies for them.\n")
+                "Warning: std aggregation mode is not available for spatial covariates. Spatial covariates remain "
+                "constant during aggregation and mean as default method applies for them.\n")
             spa_cov_list = [x for x in spatial_covariates if (x in data.columns)]
             spa_cov_list += ["temporal ID", "spatial ID"]
             mean_data = data[spa_cov_list].copy()
@@ -275,7 +280,8 @@ def aggregate(data, column_identifier=None, aggregation_mode="mean", base=None, 
     if aggregation_mode == "sum":
         if len(spatial_covariates) > 0:
             print(
-                "Warning: Sum aggregation mode is not available for spatial covariates. Spatial covariates remain constant during aggregation and mean as default method applies for them.\n")
+                "Warning: Sum aggregation mode is not available for spatial covariates. Spatial covariates remain "
+                "constant during aggregation and mean as default method applies for them.\n")
             spa_cov_list = [x for x in spatial_covariates if (x in data.columns)]
             spa_cov_list += ["temporal ID", "spatial ID"]
             mean_data = data[spa_cov_list].copy()

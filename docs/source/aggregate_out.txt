@@ -2,12 +2,5 @@
 "| 1
 | ","| aggregated_dataframe
 | ","| **type:** DataFrame
-| **details:**
-| New column(s) will be replaced to the dataframe.
-| The covariate column will be replaced with a new column in 
-| this format:
-| ‘cavariate name’‘aggregation_mode’
-| **examples:**
-| For example ‘magnitude’ column after aggregation
-| with *aggregation_mode* = ‘sum’, will replaced with
-| ‘magnitude sum’ "
+| **details:** Each combination of temporal ID and spatial ID is unique
+| with aggregated values."

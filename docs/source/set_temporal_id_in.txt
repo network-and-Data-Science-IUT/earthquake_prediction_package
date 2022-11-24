@@ -29,7 +29,7 @@
 "| 3
 | ","| unit
 | ","| **type:** str
-| **default:** 'temporal_ID'
+| **default:** 'temporal ID'
 | **options:** ['second', 'minute', 'hour', 'day', 'week', 'month', 'year', 'temporal ID']
 | **details:** 'temporal ID' option is only valid in the case of temporal ID column
 | of type int.
