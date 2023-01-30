@@ -509,7 +509,7 @@ def make_historical_data(data, column_identifier, forecast_horizon, history_leng
                         data2.at[index, "layer {} {}".format(layer, covar_col)] = final_value
         # aggregate layers
         # aggregate columns start with format layer (#layer numnber#) (covar x) to aggregated layers (covar x)
-        if aggregate_layer == True:
+        if aggregate_layer:
             columns_of_data = data2.columns
             for col in data2:
                 i = data2.columns.get_loc(col)

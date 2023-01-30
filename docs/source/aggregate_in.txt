@@ -11,7 +11,6 @@
 | *“temporal ID”* : A column containing positive integer values
 | indicating the temporal ID corresponding to each event.
 | *“target”* : A column containing target values."
-
 "| 2
 | ","| column_identifier
 | ","| **type:** dict
@@ -40,8 +39,10 @@
 | the same method for all the covariates using a string 
 | with the name of the method.
 | Format of dictionary:
-| { a temporal covariate (‘string’): aggregation method (‘str’)}
-| Options = [‘mean’, ‘max’, ‘min’, ‘std’, ‘sum’, ‘mode’, ‘base_max’]
+| { a temporal or spatial covariate (‘string’): aggregation method (‘str’)}
+| ‘mean’ as default aggregation mode, will be applied for the covariates
+| which are not specified in the dictionary.
+| **Options:** [‘mean’ , ‘max’ , ‘min’ , ‘std’ , ‘sum’ , ‘mode’ , ‘base_max’]
 | ‘base_max’: This option is only available in the case of srting
 | and the *“base”* input should specify the column name 
 | which will be considered as base.
