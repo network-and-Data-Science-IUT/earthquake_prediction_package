@@ -74,12 +74,12 @@ def rename_columns(data, column_identifier):
     return data
 
 
-def impute(data, column_identifier=None, fill_missing_target=0, K=5, impute_strategy='KNN'):
+def impute(data, column_identifier=None, fill_missing_target=0, K=None, impute_strategy="KNN"):
     """
      Impute the dataset if it contains missing values.
-     Most of the time these missing values are encoded as blanks, NaNs or other placeholders.
+     Most of the times these missing values are encoded as blanks, NaNs or other placeholders.
      We can just discard the row containing any missing values,
-     but a better solution is to impute them with a strategy using the known part of the data.
+     but a better solution is to impute them with an strategy using the known part of the data.
     """
     # check validity
     # data:
@@ -120,23 +120,31 @@ def impute(data, column_identifier=None, fill_missing_target=0, K=5, impute_stra
         raise ValueError("The input data is empty.\n")
 
     # check validity of impute strategy
-    if type(impute_strategy) != str:
-        raise TypeError("impute_strategy must be of type string.\n")
-    if impute_strategy not in IMPUTE_STRATEGIES:
-        raise ValueError("impute_strategy must be among these options: KNN, mean, median, most_frequent, None")
+    if type(impute_strategy) not in [str, float, int]:
+        raise TypeError("impute_strategy must be of type string or a number for fill_value.\n")
+    if type(impute_strategy) == str:
+        if impute_strategy not in IMPUTE_STRATEGIES:
+            raise ValueError("impute_strategy must be among these options: KNN, mean, median, most_frequent, min, max")
 
     # Impute:
+    # set default value of K to size of dataframe
+    if K == None:
+        K = len(data)
     imp_data = data.copy()
 
     # KNN imputer
     if impute_strategy == "KNN":
+        if K == len(data):
+            K = 5
         imputer = KNNImputer(n_neighbors=K)
         imp_data[:] = imputer.fit_transform(imp_data)
 
     # mean imputer
     if impute_strategy == "mean":
-        imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
-        imp_data[:] = imputer.fit_transform(imp_data)
+        if K == len(data):
+            imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
+            imp_data[:] = imputer.fit_transform(imp_data)
+        # else
 
     # median imputer
     if impute_strategy == "median":
@@ -148,8 +156,27 @@ def impute(data, column_identifier=None, fill_missing_target=0, K=5, impute_stra
         imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
         imp_data[:] = imputer.fit_transform(imp_data)
 
+    # min imputer
+    if impute_strategy == "min":
+        imputer = ColumnTransformer(
+            [(k, SimpleImputer(strategy="constant", fill_value=imp_data[k].min()), [k]) for k in list(imp_data)])
+        imp_data[:] = imputer.fit_transform(imp_data)
+
+    # max imputer
+    if impute_strategy == "max":
+        imputer = ColumnTransformer(
+            [(k, SimpleImputer(strategy="constant", fill_value=imp_data[k].max()), [k]) for k in list(imp_data)])
+        imp_data[:] = imputer.fit_transform(imp_data)
+
+    # constant value
+    if type(impute_strategy) in [int, float]:
+        imputer = SimpleImputer(missing_values=np.nan, strategy="constant", fill_value=impute_strategy)
+        imp_data[:] = imputer.fit_transform(imp_data)
+
     # impute target with fill_missing_target
-    imp_data['target'].fillna(value=fill_missing_target, inplace=True)
+
+    # imp_data['target'].fillna(value = fill_missing_target, inplace=True)
 
     return imp_data
+
 
