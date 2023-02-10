@@ -123,10 +123,9 @@ def download_data(time_interval,save_dataframe = False,magnitude_range=None,dept
     from urllib.request import urlopen
     import pandas as pd
     from bs4 import BeautifulSoup
-    from urllib.error import URLError
     input_checking_download_data(time_interval,save_dataframe,magnitude_range,depth_range,data_center,
                                 rectangular_region,circular_region)
-    # creating the url to download the data.
+
     if data_center == 'USGS':
         url = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv'
     elif data_center == 'ISC':
@@ -148,11 +147,7 @@ def download_data(time_interval,save_dataframe = False,magnitude_range=None,dept
             url = url + '&maxradiuskm=' + str(circular_region['radius'])
         if data_center == 'ISC' or data_center == 'IRIS':
             url = url + '&maxradius=' + str(circular_region['maxradius']) + '&minradius=' + str(circular_region['minradius'])
-    try:         
-      downloaded_url = urlopen(url)
-    except URLError as e:
-      print(f"An error occurred: {e.reason}")
-
+    downloaded_url = urlopen(url)
     if data_center == 'USGS':
         downloaded_data = pd.read_csv(downloaded_url)
     else:
@@ -160,16 +155,11 @@ def download_data(time_interval,save_dataframe = False,magnitude_range=None,dept
         events = bs_data.find_all('event')
         downloaded_data = pd.DataFrame(columns=['time','latitude','longitude','depth','magnitude'])
         for event in events:
-            try:
-              downloaded_data = downloaded_data.append({'time':event.find('time').find('value').text,
-                          'latitude':float(event.find('latitude').find('value').text) ,
-                          'longitude':float(event.find('longitude').find('value').text),
-                          'depth':float(event.find('depth').find('value').text),
-                          'magnitude':float(event.find('mag').find('value').text)},ignore_index=True)
-            except:
-              # some records do not have of the of the columns so we do not add them
-              # to the output dataset.
-              pass
+            downloaded_data = downloaded_data.append({'time':event.find('time').find('value').text,
+                        'latitude':float(event.find('latitude').find('value').text) ,
+                        'longitude':float(event.find('longitude').find('value').text),
+                        'depth':float(event.find('depth').find('value').text),
+                        'magnitude':float(event.find('mag').find('value').text)},ignore_index=True)
     if save_dataframe:
         downloaded_data.to_csv('earthquake_data.csv')
     return downloaded_data
