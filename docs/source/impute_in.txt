@@ -1,0 +1,66 @@
+#,Input Name,Input Description
+"| 1
+| ","| data
+| ","| **type:** DataFrame or string
+| **default:** -
+| **details:** All the columns must be numeric and columns
+| containing non-numeric values, will be removed.
+| Imputation of ids doesn't make sense, so if temporal id or
+| spatial id columns contain missing values, this function will
+| return data without imputing these columns.
+| It's not obliging to specify temporal id, spatial id, or target
+| but if each of them were present, this function will treat
+| them differently."
+"| 2
+| ","| column_identifier
+| ","| **type:** dict
+| **default:** None
+| **details:** The presence of this item is not necessary
+| but if the data contains columns that represent temporal id,
+| spatial id, or target, due to the different approaches in imputing them,
+| it's necessary to identify them in column identifier. Otherwise, this function
+| will treat them as other covariates.
+| Note that the priority of data column names is higher than column identifier.
+| So if temporal id, spatial id, or target existed in both column names and
+| column identifier, the column identifier will be ignored."
+"| 3
+| ","| missing_value
+| ","| **type:** string
+| **default:** np.nan
+| **details:** this entry specifies the symbol that shows missing values
+| in data. These values will be replaced with np.nan. For example,
+| it may be “?” or “Null”. Make sure to specify missing values,
+| otherwise, if this symbol is recognized as string, the whole column
+| will be dropped from the data."
+"| 4
+| ","| fill_missing_target
+| ","| **type:** int or float
+| **default:** 0
+| **details:** If data or column identifier contains *target*,
+| all the missing values in the target column, will be replaced with
+| this value."
+"| 5
+| ","| K
+| ","| **type:** int
+| **default:** None
+| **details:** K specifies the number of nearest neighbors
+| which their value will be used in imputing the missing value.
+| the default value of K, in the case of “KNN” impute_strategy, is 5
+| and in other strategies it's considered as the whole data.
+| KNN imputer is equal to mean strategy with desired K."
+"| 6
+| ","| impute_strategy
+| ","| **type:** string
+| **default:** ‘KNN’
+| **details:** Specify the strategy to impute the missing values.
+| **Options:** [‘KNN’ , ‘mean’ , ‘median’ , ‘most_frequent’ , ‘min’ , ‘max’]
+| *KNN*: The idea in KNN method is to identify K samples in the dataset
+| that are similar or close in the space. Then we use these K samples to estimate
+| the value of the missing data points. Each sample's missing values are imputed
+| using the mean value of the K-neighbors found in the dataset.
+| *mean*: Use min of K neighbors or the mean value of the missing feature, to
+| impute the missing values.
+| *min*: Use minimum value in K neighbors or in the feature to impute
+| the missing values.
+| *max*: Use the maximum value in K neighbors or in the feature to impute
+| the missing values."
