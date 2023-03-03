@@ -143,14 +143,7 @@ def impute(data, column_identifier=None, missing_value=np.nan, fill_missing_targ
     # replace missing_value with np.nan
     data.replace(missing_value, np.nan, inplace=True)
 
-    # check if all data are numeric
-    numeric_data = data.select_dtypes(include=np.number)
-    if numeric_data.size != data.size:
-        print(
-            "Warning: Columns containing non-numeric values were removed. Be careful in specifying the missing value.\n")
-        data = numeric_data
-
-    # drop columns  which has all the values as NaN
+    # drop columns which has all the values as NaN
     size = data.size
     data.dropna(axis=1, how='all', inplace=True)
     if data.size != size:
@@ -166,17 +159,24 @@ def impute(data, column_identifier=None, missing_value=np.nan, fill_missing_targ
     # approach)
     id_df = pd.DataFrame()
     target_df = pd.DataFrame()
-    if "temporal id" in data:
-        id_df["temporal id"] = data["temporal id"]
-        data.drop(["temporal id"], axis=1, inplace=True)
+    if "temporal ID" in data:
+        id_df["temporal ID"] = data["temporal ID"]
+        data.drop("temporal ID", axis=1, inplace=True)
 
-    if "spatial id" in data:
-        id_df["spatial id"] = data["spatial id"]
-        data.drop(["temporal id"], axis=1, inplace=True)
+    if "spatial ID" in data:
+        id_df["spatial ID"] = data["spatial ID"]
+        data.drop("spatial ID", axis=1, inplace=True)
 
     if "target" in data:
         target_df = data["target"]
-        data.drop(["target"], axis=1, inplace=True)
+        data.drop("target", axis=1, inplace=True)
+
+    # check if all data are numeric
+    numeric_data = data.select_dtypes(include=np.number)
+    if numeric_data.size != data.size:
+        print(
+            "Warning: Columns containing non-numeric values were removed. Be careful in specifying the missing value.\n")
+        data = numeric_data
 
     # Impute:
     # set default value of K to size of dataframe
