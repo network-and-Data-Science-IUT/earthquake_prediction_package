@@ -144,24 +144,27 @@ def input_checking_extract_feature(data,column_identifier,feature_list):
         data = pd.read_csv(data)
     else:
         data = data.copy()
+    if feature_list is None:
+      return data
     # checking 'feature_list' input:
     # type checking 1:
     if not isinstance(feature_list,(list,tuple)):
-       raise TypeError('Error: invalid type for \'feature_list\' input. expected list or tuple') 
-    # type checking 2:
-    if not all(isinstance(feature,str) for feature in feature_list):
-       raise TypeError('Error: invalid type for \'feature_list\' input. elements are expected to be string type')    
-    # value checking 1:
-    if not all([(feature in configurations.FEATURES or feature.startswith('delta time')) for feature in feature_list]):
-        raise ValueError('Error: invalid value for \'feature_list\' input. name of the feature is not in feature list\n'+ \
-        f'feature list = {configurations.FEATURES}')
-    # value checking 2:
-    for feature in feature_list:
-        if feature.startswith('delta time'):
-            try:
-                float(feature[len('delta time')+1:])
-            except:
-                raise ValueError('Error: an error occured while trying to convert the hyperparameter of delta time to a float.expected format: \'delta time (a float number)\'')
+       raise TypeError('Error: invalid type for \'feature_list\' input. expected list, tuple or None') 
+    if feature_list is not None:
+      # type checking 2:
+      if not all(isinstance(feature,str) for feature in feature_list):
+        raise TypeError('Error: invalid type for \'feature_list\' input. elements are expected to be string type')    
+      # value checking 1:
+      if not all([(feature in FEATURES or feature.startswith('delta time')) for feature in feature_list]):
+          raise ValueError('Error: invalid value for \'feature_list\' input. name of the feature is not in feature list\n'+ \
+          f'feature list = {FEATURES}')
+      # value checking 2:
+      for feature in feature_list:
+          if feature.startswith('delta time'):
+              try:
+                  float(feature[len('delta time')+1:])
+              except:
+                  raise ValueError('Error: an error occured while trying to convert the hyperparameter of delta time to a float.expected format: \'delta time (a float number)\'')
     # checking column_identifier:
     if column_identifier is not None:
         # type checking:
@@ -221,19 +224,20 @@ def extract_feature(data,feature_list,column_identifier=None):
     spatial_id_temporal_id = np.array([(spatial_id,temporal_id) for spatial_id in data['spatial ID'].unique() for temporal_id in data[data['spatial ID'] == spatial_id]['temporal ID'].unique()])
     extracted_features_temporal = pd.DataFrame({'spatial ID':spatial_id_temporal_id[:,0],'temporal ID' : spatial_id_temporal_id[:,1]})
     extracted_features_spatial = pd.DataFrame({'spatial ID':unique_spatial_ids})
+    
+    if feature_list is not None:
+      for feature in feature_list:
 
-    for feature in feature_list:
+          if feature == 'event frequency':
+              extracted_features_temporal['event frequency'] = event_frequency(data)['event frequency']
 
-        if feature == 'event frequency':
-            extracted_features_temporal['event frequency'] = event_frequency(data)['event frequency']
+          if feature.startswith('delta time'):
+              extracted_features_spatial['delta time'] = delta_time(data,float(feature[len('delta time')+1:]))['delta time']
 
-        if feature.startswith('delta time'):
-            extracted_features_spatial['delta time'] = delta_time(data,float(feature[len('delta time')+1:]))['delta time']
+          if feature == 'total energy':
+              extracted_features_temporal['total energy'] = total_energy(data)['total energy']
 
-        if feature == 'total energy':
-            extracted_features_temporal['total energy'] = total_energy(data)['total energy']
-
-        if feature == 'b value':
-            extracted_features_spatial['b value'] = b_value(data)['b value']
+          if feature == 'b value':
+              extracted_features_spatial['b value'] = b_value(data)['b value']
 
     return extracted_features_temporal,extracted_features_spatial
