@@ -10,7 +10,8 @@ import re
 import configurations
 
 '''
-Transforming data to the historical format and extract features. This subprocess prepare the final data frame including features and target variable for modeling.
+Transforming data to the historical format and extract features. This subprocess prepare the final data frame 
+including features and target variable for modeling. 
 
 The set of features is consisted of:
 
@@ -18,7 +19,8 @@ The set of features is consisted of:
 
 2. Historical values of these covariates at h-1(where h is history length) previous temporal units (t-1 , t-2 , … , t-h+1).
 
-3. The covariates of the L-layer pixels(where L is layer_number L = (0,1,…,maximum_layer_number)) at ‘history_length_of_neighbors’-1 previous temporal units(t-1 , t-2 , … , t-‘history_length_of_neighbors’+1)
+3. The covariates of the L-layer pixels(where L is layer_number L = (0,1,…,maximum_layer_number)) at 
+‘history_length_of_neighbors’-1 previous temporal units(t-1 , t-2 , … , t-‘history_length_of_neighbors’+1) 
 
 The target of the final data frame is the values of the target variable at the temporal unit t+r.
 '''
@@ -148,14 +150,14 @@ def find_neighbors(layer_number, neighbours_dictionary, spatial_id):
     list_of_neighbors = []
 
     for node, length in path_length.items():
-        if length == layer_number:
+        if length == (layer_number-1):
             list_of_neighbors.append(node)
 
     return list_of_neighbors
 
 
 def make_historical_data(data, column_identifier, forecast_horizon, history_length=1,
-                         layer_number=0, aggregate_layer=True, neighboring_covariates=None, neighbours_dictionary=None,
+                         layer_number=1, aggregate_layer=True, neighboring_covariates=None, neighbours_dictionary=None,
                          aggregation_mode="mean", history_of_layers=False):
     """
     Make data historical in both temporal and spatial aspects
@@ -297,6 +299,13 @@ def make_historical_data(data, column_identifier, forecast_horizon, history_leng
     # prepare data
     # remove columns other than temporal and spatial ids, target , temporal and spatial covariates
     for column in data:
+        if bool(re.search("Target \(.*?\)", column)):
+            if column not in ["Target (normal)", "Target (cumulative)", "Target (differential)", "Target (moving "
+                                                                                                 "average)"]:
+                raise ValueError(
+                    "modified target must be among these options: Target (normal), Target (cumulative), "
+                    "Target (differential), Target (moving average)]\n")
+
         if column not in ["Normal target", "temporal ID", "spatial ID", "Target (normal)", "Target (cumulative)",
                           "Target (differential)", "Target (moving average)"]:
             if column not in (spatial_covariates + temporal_covariates):
@@ -309,7 +318,7 @@ def make_historical_data(data, column_identifier, forecast_horizon, history_leng
     # sort base on spatial id and temporal ids
     data.sort_values(by=['spatial ID', 'temporal ID'], ascending=True, ignore_index=True, inplace=True)
 
-    # make data continous (contain all temporal id in each temporal covariates) ** add a new column and make that 1
+    # make data continuous (contain all temporal id in each temporal covariates) ** add a new column and make that 1
     # if this row is new
     data["new_row"] = 0
     grouped_data_spatial = data.groupby("spatial ID")
@@ -368,7 +377,13 @@ def make_historical_data(data, column_identifier, forecast_horizon, history_leng
             raise ValueError("forecast_horizon must be a positive number.\n")
         for col in contents_of_group:
             if bool(re.search("Target \(.*?\)", col)):
-                name_of_modified_target = col
+                if col in ["Target (normal)", "Target (cumulative)", "Target (differential)",
+                           "Target (moving average)"]:
+                    name_of_modified_target = col
+                else:
+                    raise ValueError(
+                        "modified target must be among these options: Target (normal), Target (cumulative), "
+                        "Target (differential), Target (moving average)]\n")
         if forecast_horizon == 0:
             target_group["Normal target"] = contents_of_group["Normal target"].copy()
             target_group[name_of_modified_target] = contents_of_group[name_of_modified_target].copy()
@@ -393,8 +408,8 @@ def make_historical_data(data, column_identifier, forecast_horizon, history_leng
     # layer_number
     if type(layer_number) != int:
         raise TypeError("The layer_number must be of type int.\n")
-    if layer_number < 0:
-        raise ValueError("The layer_number must be a none negative number.\n")
+    if layer_number <= 0:
+        raise ValueError("The layer_number must be a positive number.\n")
     # aggregate_layer
     if type(aggregate_layer) != bool:
         raise TypeError("The aggregate_layer must be of type bool.\n")
@@ -448,7 +463,7 @@ def make_historical_data(data, column_identifier, forecast_horizon, history_leng
     if aggregation_mode not in configurations.neighbours_values_before_agg:
         raise ValueError("The aggregation_mode must be among these options: [mean, max, min, sum, std]\n")
     # raise error in case of empty or none neighboring covariates and layer number>0
-    # make data continous for all temporal IDs
+    # make data continuous for all temporal IDs
     grouped_data_spatial = data2.groupby("spatial ID")
     missed_temporal_ids_data = pd.DataFrame()
     min_temporal_id = data2["temporal ID"].min()
@@ -480,7 +495,7 @@ def make_historical_data(data, column_identifier, forecast_horizon, history_leng
                 filter_columns.extend(filter_column)
 
             for covar_col in data2[filter_columns]:
-                for layer in range(1, layer_number + 1):
+                for layer in range(1, layer_number):
                     index = -1
                     for spa_id in data2["spatial ID"]:
                         index += 1
