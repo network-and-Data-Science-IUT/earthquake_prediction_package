@@ -41,7 +41,7 @@ def input_checking_download_data(time_interval,save_dataframe,magnitude_range,de
         if len(rectangular_region) != 4:
             raise Exception('Error: invalid length for \'rectangular_region\'. expected length is four.')
         # value checking:
-        if not ((-180 <= rectangular_region[0] < rectangular_region[1] <= 180) and (-90 <= rectangular_region[2] < rectangular_region[3] <= 90)):
+        if not ((-90 <= rectangular_region[0] < rectangular_region[1] <= 90) and (-180 <= rectangular_region[2] < rectangular_region[3] <= 180)):
             raise ValueError('Error: invalid value for \'rectangular_region\'.expected values are:\n'+
                              '-180 <= longitude <= +180, -90 <= latitude <= 90.')
 
@@ -124,8 +124,10 @@ def download_data(time_interval,save_dataframe = False,magnitude_range=None,dept
     import pandas as pd
     from bs4 import BeautifulSoup
     from urllib.error import URLError
+    import os
     input_checking_download_data(time_interval,save_dataframe,magnitude_range,depth_range,data_center,
                                 rectangular_region,circular_region)
+    
     # creating the url to download the data.
     if data_center == 'USGS':
         url = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv'
@@ -138,38 +140,51 @@ def download_data(time_interval,save_dataframe = False,magnitude_range=None,dept
         url = url + '&minmagnitude=' + str(magnitude_range[0]) + '&maxmagnitude=' + str(magnitude_range[1])
     if depth_range is not None:
         url = url + '&mindepth=' + str(depth_range[0]) + '&maxdepth=' + str(depth_range[1])
+    
+    geo_info = ''
     if rectangular_region is not None:
         url = url + '&minlatitude=' + str(rectangular_region[0]) + '&maxlatitude=' + str(rectangular_region[1]) + '&minlongitude=' + str(rectangular_region[2]) + \
+                '&maxlongitude=' + str(rectangular_region[3])
+        geo_info = '&minlatitude=' + str(rectangular_region[0]) + '&maxlatitude=' + str(rectangular_region[1]) + '&minlongitude=' + str(rectangular_region[2]) + \
                 '&maxlongitude=' + str(rectangular_region[3])
     elif circular_region is not None:
         url = url + '&longitude=' +str( circular_region['longitude']) + \
                     '&latitude=' + str(circular_region['latitude'])
         if data_center == 'USGS':
             url = url + '&maxradiuskm=' + str(circular_region['radius'])
+            geo_info = '&maxradiuskm=' + str(circular_region['radius'])
         if data_center == 'ISC' or data_center == 'IRIS':
             url = url + '&maxradius=' + str(circular_region['maxradius']) + '&minradius=' + str(circular_region['minradius'])
+            geo_info = '&maxradius=' + str(circular_region['maxradius']) + '&minradius=' + str(circular_region['minradius'])
     try:         
       downloaded_url = urlopen(url)
     except URLError as e:
       print(f"An error occurred: {e.reason}")
+      print('You can try other datacenters or change the input parameters.')
+      return
 
     if data_center == 'USGS':
         downloaded_data = pd.read_csv(downloaded_url)
+        downloaded_data.rename({'mag':'magnitude'},axis=1,inplace=True)
     else:
         bs_data = BeautifulSoup(downloaded_url, "xml")
         events = bs_data.find_all('event')
-        downloaded_data = pd.DataFrame(columns=['time','latitude','longitude','depth','magnitude'])
+        event_records = []
         for event in events:
             try:
-              downloaded_data = downloaded_data.append({'time':event.find('time').find('value').text,
-                          'latitude':float(event.find('latitude').find('value').text) ,
-                          'longitude':float(event.find('longitude').find('value').text),
-                          'depth':float(event.find('depth').find('value').text),
-                          'magnitude':float(event.find('mag').find('value').text)},ignore_index=True)
+              event_records.append({'time':event.find('time').find('value').text,
+                           'latitude':float(event.find('latitude').find('value').text) ,
+                           'longitude':float(event.find('longitude').find('value').text),
+                           'depth':float(event.find('depth').find('value').text),
+                           'magnitude':float(event.find('mag').find('value').text)})
             except:
-              # some records do not have of the of the columns so we do not add them
-              # to the output dataset.
+              # some records do not have of the of the columns so we do not add them to the output dataset.
               pass
+        downloaded_data = pd.DataFrame.from_records(event_records)
     if save_dataframe:
-        downloaded_data.to_csv('earthquake_data.csv')
+        # create a directory to save the data
+        if not os.path.exists('./data'):
+                os.makedirs('./data')  
+        downloaded_data.to_csv('./data/'+'eq_data'+geo_info+'&s='+time_interval[0]+'&e='+time_interval[1]+'&dc='+data_center+'.csv')
+        print('dataframe saved successfully!')
     return downloaded_data
