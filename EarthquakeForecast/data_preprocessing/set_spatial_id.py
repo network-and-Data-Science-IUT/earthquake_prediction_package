@@ -7,7 +7,6 @@ from collections import defaultdict
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 import numpy as np
-import helper_functions
 
 
 # Using enum class to define pixelating type
@@ -15,6 +14,129 @@ class Pixelating_type(enum.Enum):
    Two_diminsion = 1
    Three_diminsion = 2
 
+def check_magnitude(data):
+    import numpy as np
+    if not data['magnitude'].dtype in [np.float64,np.int64]:
+        raise Exception('Error: invalid type for \'magnitude\' column in dataframe. expected types are int64 and float64.')
+    if data['magnitude'].isnull().values.any():
+        print('Warning: there are some NaN values in the magnitude column.')
+        data_without_nan = data[data['magnitude'].notna()]
+    if len(data_without_nan[data_without_nan['magnitude'] < 0]) > 0:
+        print('Warning: negative magnitude value is not acceptable. rows that their depths are negative will be removed.')
+        data = data[data['magnitude'] >= 0]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing none-valid magnitudes.')
+    return data
+
+
+
+def check_latitude(data):
+    import numpy as np
+    if not data['latitude'].dtype in [np.float64,np.int64]:
+        raise Exception('Error: invalid type for \'latitude\' column in dataframe. expected types are int64 and float64')
+    if data['latitude'].isnull().values.any():
+        print('Warning: there are some NaN values in the latitude column. those rows will be removed from dataframe.')
+        data = data[data['latitude'].notna()]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing NaN columns.')
+    if len(data[(data['latitude'] < -90) | (data['latitude'] > 90)]) > 0:
+        print('Warning: latitude are not in range [-90,90]. rows that are not in the range will be removed.')
+        data = data[(data['latitude'] >= -90) & (data['latitude'] <= 90)]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing non valid latitudes.')
+    return data
+
+
+
+def check_longitude(data):
+    import numpy as np
+    if not data['longitude'].dtype in [np.float64,np.int64]:
+        raise Exception('Error: invalid type for \'longitude\' column in dataframe. expected types are int64 and float64')
+    if data['longitude'].isnull().values.any():
+        print('Warning: there are some NaN values in the longitude column. those rows will be removed from dataframe.')
+        data = data[data['longitude'].notna()]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing NaN columns.')
+    if len(data[(data['longitude'] < -180) | (data['longitude'] > 180)]) > 0:
+        print('Warning: longitude are not in range [-180,180]. rows that are not in the range will be removed.')
+        data = data[(data['longitude'] >= -180) & (data['longitude'] <= 180)]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing non valid longitudes.')
+    return data
+
+
+
+def check_depth(data):
+    import numpy as np
+    if not data['depth'].dtype in [np.float64,np.int64]:
+        raise Exception('Error: invalid type for \'depth\' column in dataframe. expected types are int64 and float64.')
+    if data['depth'].isnull().values.any():
+        print('Warning: there are some NaN values in the depth column. those rows will be removed from dataframe.')
+        data = data[data['depth'].notna()]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing NaN columns.')
+    if len(data[data['depth'] < 0]) > 0:
+        print('Warning: negative depth value is not acceptable. rows that their depths are negative will be removed.')
+        data = data[data['depth'] >= 0]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing none-valid depths.')
+    return data
+
+
+
+def check_temporal_id(data):
+    import numpy as np
+    from pandas.api.types import is_numeric_dtype
+    if not is_numeric_dtype:
+        raise Exception('Error: invalid type for \'temporal id\' column in dataframe. expected numeric type.')
+    if data['temporal id'].isnull().values.any():
+        print('Warning: there are some NaN values in the temporal id column. those rows will be removed from dataframe.')
+        data = data[data['temporal id'].notna()]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing NaN rows from temporal id.')
+    return data
+
+
+
+def check_spatial_id(data):
+    import numpy as np
+    if data['spatial id'].isnull().values.any():
+        print('Warning: there are some NaN values in the spatial id column. those rows will be removed from dataframe.')
+        data = data[data['spatial id'].notna()]
+        if len(data) == 0:
+            raise Exception('dataframe got zero len after removing NaN rows from spatial id.')
+    return data
+
+
+
+def check_target(data):
+    import numpy as np
+    if not (data['target'].dtype == np.float64 or data['target'].dtype == np.int64):
+        raise TypeError('Error: the \'target\' column type should be either float64 or int64.')
+    if data['target'].isnull().values.any():
+         print('Warning: The target variable column includes Null values and therefore the resulting values of applying' + 
+         ' target_mode may not be valid.')
+    return data
+
+
+
+def check_data_columns(data,list_of_columns):
+    for column in list_of_columns:
+        if column == 'magnitude':
+            data = check_magnitude(data)
+        if column == 'longitude':
+            data = check_longitude(data)
+        if column == 'latitude':
+            data = check_latitude(data)
+        if column == 'depth':
+            data = check_depth(data)
+        if column == 'temporal id':
+            data = check_temporal_id(data)
+        if column == 'spatial id':
+            data = check_spatial_id(data)
+        if column == 'target':
+            data = check_target(data)
+    return data
 
 def voronoi_polygons(voronoi, diameter):
     """
@@ -27,7 +149,7 @@ def voronoi_polygons(voronoi, diameter):
     centroid = voronoi.points.mean(axis=0)
     # Mapping from (input point index, Voronoi point index) to list of
     # unit vectors in the directions of the infinite ridges starting
-    # at the Voronoi point and neighbouring the input point.
+    # at the Voronoi point and neighboring the input point.
     ridge_direction = defaultdict(list)
     for (p, q), rv in zip(voronoi.ridge_points, voronoi.ridge_vertices):
         u, v = sorted(rv)
@@ -70,6 +192,7 @@ def voronoi_polygons(voronoi, diameter):
         yield Polygon(np.concatenate((finite_part, extra_edge)))
 
 def plot_earthquake_data(data,target_area,pixel_scale):
+
     depth_level = 1
     if len(pixel_scale) == 2:
         max_lon,min_lon,max_lat,min_lat = target_area
@@ -91,7 +214,7 @@ def plot_earthquake_data(data,target_area,pixel_scale):
                 folium.Marker(
                     location=[pixel_lat, pixel_lon],
                     icon=None,
-                    popup='<b>spatial ID: %d\nLocation:\nlon=%.2f,lat=%.2f</b>'%(i * pixel_scale[0] + j + 1 + pixel_scale[0]*pixel_scale[1]*l,pixel_lon,pixel_lat),
+                    popup='<b>spatial id: %d\nLocation:\nlon=%.2f,lat=%.2f</b>'%(i * pixel_scale[0] + j + 1 + pixel_scale[0]*pixel_scale[1]*l,pixel_lon,pixel_lat),
                     ).add_to(map)
         # Draw the boundary lines between the pixels
         # Draw the lines across latitudes:
@@ -134,17 +257,18 @@ def plot_earthquake_data(data,target_area,pixel_scale):
                 popup='Location:\nlon=%.2f,lat=%.2f</b>'%(event['longitude'], event['latitude'])
             ).add_to(map)        
         map.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
-        yield map,output_name
+        yield map,output_name+'&pixel_scale='+str(pixel_scale)
 
 
 def plot_map(data,target_area=None,pixel_scale =None,pixelatin_type = None,kmeans=None):
 
-
+    # create a directory to save the plots
+    if not os.path.exists('./plots'):
+            os.makedirs('./plots')  
     if pixel_scale is not None:
-        
         for map,output_name in plot_earthquake_data(data,target_area,pixel_scale):
-            map.save(output_name + '.html')
-
+            map.save('./plots/'+output_name + '.html')
+        
     elif kmeans is not None:
         max_lon,min_lon,max_lat,min_lat = target_area
         centroids = kmeans.cluster_centers_
@@ -174,13 +298,13 @@ def plot_map(data,target_area=None,pixel_scale =None,pixelatin_type = None,kmean
                         weight=2,
                         opacity=0.8,
                     ).add_to(map)
-
-        # ploting the spatial ID markers on the map:
+                
+        # ploting the spatial id markers on the map:
         for i,centroid in enumerate(centroids):
             folium.Marker(
                 location=centroid,
                 icon=None,
-                popup='<b>spatial ID: %d\n Location:\n lon=%.2f,lat=%.2f</b>'%(i+1,centroid[1],centroid[0]),
+                popup='<b>spatial id: %d\n Location:\n lon=%.2f,lat=%.2f</b>'%(i+1,centroid[1],centroid[0]),
                 ).add_to(map)
         
       
@@ -197,13 +321,14 @@ def plot_map(data,target_area=None,pixel_scale =None,pixelatin_type = None,kmean
             ).add_to(map)
         # fiting the map on the target area and saving the result:
         map.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
-        map.save("kmeans_clustered.html")
+
+        map.save("./plots/kmeans_clustered"+"&K="+str(len(centroids)) +".html")
 
 
 def scale_dataframe_using_pixel_scale(data, pixel_scale,target_area,pixelating_type,plot):
     '''
-    divide the region of interest into some set of pixels and then set a spatial ID
-    for each of the pixels in the spatial ID column.
+    divide the region of interest into some set of pixels and then set a spatial id
+    for each of the pixels in the spatial id column.
     '''
     import numpy as np
     if pixelating_type == Pixelating_type.Two_diminsion:
@@ -223,7 +348,7 @@ def scale_dataframe_using_pixel_scale(data, pixel_scale,target_area,pixelating_t
         j_s[j_s > (y_pixels-1)*x_pixels] = (y_pixels-1)*x_pixels
         index = i_s + j_s + 1
         spatial_scaled_data = data
-        spatial_scaled_data['spatial ID'] = index.astype(np.int64)
+        spatial_scaled_data['spatial id'] = index.astype(np.int64)
         # ploting
         if plot:
             plot_map(data=data,pixel_scale=pixel_scale,target_area=target_area,pixelatin_type=Pixelating_type.Two_diminsion)
@@ -251,7 +376,7 @@ def scale_dataframe_using_pixel_scale(data, pixel_scale,target_area,pixelating_t
         z_s[z_s > x_pixels*y_pixels*(z_pixels-1)] = x_pixels*y_pixels*(z_pixels-1)
         index =  i_s + j_s + z_s + 1
         spatial_scaled_data = data
-        spatial_scaled_data['spatial ID'] = index.astype(np.int64)
+        spatial_scaled_data['spatial id'] = index.astype(np.int64)
         # ploting
         if plot:
             plot_map(data=data,pixel_scale=pixel_scale,target_area=target_area,pixelatin_type=Pixelating_type.Three_diminsion)
@@ -261,15 +386,15 @@ def scale_dataframe_using_pixel_scale(data, pixel_scale,target_area,pixelating_t
 
 def scale_dataframe_using_kmeans_clusters(data, kmeans_clusters, plot,target_area):
     '''
-    divide the region of interest into some set of clusters and then set a spatial ID
-    for each of the clusters in the spatial ID column.
+    divide the region of interest into some set of clusters and then set a spatial id
+    for each of the clusters in the spatial id column.
     '''
     from sklearn.cluster import KMeans
     kmeans = KMeans(kmeans_clusters)
     lon_and_lat = data[['longitude','latitude']]
     kmeans.fit(lon_and_lat)
     spatial_ids = kmeans.fit_predict(lon_and_lat)
-    data['spatial ID'] = spatial_ids+1
+    data['spatial id'] = spatial_ids+1
     spatial_scaled_data = data
     # ploting
     if plot:
@@ -413,14 +538,14 @@ def input_checking_set_spatial_id(data,column_identifier, pixel_scale,
                         data = data.rename(columns={column_identifier['depth']:'depth'})
         else:
             # key checking:
-            if not all([((x in column_identifier.keys()) or (x in data.columns)) for x in ['spatial ID'] ]):
-              raise Exception('Error: not all keys(spatial ID) found in \'column_identifier\' input or in the dataframe.')
+            if not all([((x in column_identifier.keys()) or (x in data.columns)) for x in ['spatial id'] ]):
+              raise Exception('Error: not all keys(spatial id) found in \'column_identifier\' input or in the dataframe.')
             # column checking:
-            if not all([True if (x in data.columns) else (x in column_identifier.keys()) for x in ['spatial ID'] ]):
+            if not all([True if (x in data.columns) else (x in column_identifier.keys()) for x in ['spatial id'] ]):
                 raise Exception('Error: not all columns specified in \'column_identifier\' input found in \'data\' input.')
             # renaming in dataframe:
-            if not ('spatial ID' in data.columns):
-                data = data.rename(columns={column_identifier['spatial ID']:'spatial ID'})            
+            if not ('spatial id' in data.columns):
+                data = data.rename(columns={column_identifier['spatial id']:'spatial id'})            
     else:
         if (pixel_scale is not None) or (kmeans_clusters is not None):
             if not (('longitude' in data.columns) and ('latitude' in data.columns)):
@@ -430,16 +555,16 @@ def input_checking_set_spatial_id(data,column_identifier, pixel_scale,
                     if not ('depth' in data.columns):
                         raise Exception('Error: dataframe must contain depth column.')
         else:
-            if not ('spatial ID' in data.columns):
-                raise Exception('Error: dataframe must contain spatial ID column.')
+            if not ('spatial id' in data.columns):
+                raise Exception('Error: dataframe must contain spatial id column.')
     # checking the content of 'data' input columns:
     if (pixel_scale is not None) or (kmeans_clusters is not None):
-        data = helper_functions.check_data_columns(data,['longitude','latitude'])
+        data = check_data_columns(data,['longitude','latitude'])
         if pixel_scale is not None:
             if len(pixel_scale) == 3:
-                data = helper_functions.check_data_columns(data,['depth'])
+                data = check_data_columns(data,['depth'])
     else:
-        data = helper_functions.check_data_columns(data,['spatial ID'])
+        data = check_data_columns(data,['spatial id'])
     # checking if all events happen in the target area:
     if target_area is not None:
         if len(target_area) == 4:
@@ -464,12 +589,12 @@ def set_spatial_id(data,column_identifier = None, pixel_scale = None,
                    kmeans_clusters = None,target_area = None,plot = True):
     '''
     This function will divide the region of interest into some sub-regions (e.g pixels or clusters)
-    and set a spatial ID for each sub-region based on the longitude, latitude, and depth.
+    and set a spatial id for each sub-region based on the longitude, latitude, and depth.
     '''
     data = input_checking_set_spatial_id(data,column_identifier, pixel_scale,
                    kmeans_clusters ,target_area)
-    # check if the user initially set a spatial ID column:
-    if 'spatial ID' in data.columns:
+    # check if the user initially set a spatial id column:
+    if 'spatial id' in data.columns:
         spatial_scaled_dataframe = data
         return spatial_scaled_dataframe
     # find the target area if it is not initiated by the user:
@@ -487,6 +612,6 @@ def set_spatial_id(data,column_identifier = None, pixel_scale = None,
             spatial_scaled_dataframe = scale_dataframe_using_pixel_scale(data,pixel_scale,target_area,Pixelating_type.Three_diminsion,plot)
         return spatial_scaled_dataframe
     if kmeans_clusters is not None:
-       # seting spatial ID with kmeans clustering:
+       # seting spatial id with kmeans clustering:
        spatial_scaled_dataframe = scale_dataframe_using_kmeans_clusters(data,kmeans_clusters,plot,target_area)
        return spatial_scaled_dataframe

@@ -2,7 +2,7 @@
 
 IMPUTE_STRATEGIES = ["KNN", "mean", "median", "min", "max", "most_frequent"]
 IMPUTE_STRATEGY_DEFAULT = "mean"
-TEMPORAL_UNIT_OPTIONS = ["second", "minute", "hour", "day", "week", "month", "year", "temporal ID"]
+TEMPORAL_UNIT_OPTIONS = ["second", "minute", "hour", "day", "week", "month", "year", "temporal id"]
 AGGREGATION_MODE_OPTIONS = ["mean", "max", "min", "std", "sum", "base_max", "mode"]
 FEATURES = ["b value", "total energy", "delta time", "event frequency"]
 TARGET_MODES = ["cumulative", "differential", "moving average x", "classify"]
@@ -83,24 +83,24 @@ def check_depth(data):
 
 def check_temporal_id(data):
     import numpy as np
-    if not data['temporal ID'].dtype in [np.int64]:
-        raise Exception('Error: invalid type for \'temporal ID\' column in dataframe. expected type is int64.')
-    if data['temporal ID'].isnull().values.any():
-        print('Warning: there are some NaN values in the temporal ID column. those rows will be removed from dataframe.')
-        data = data[data['temporal ID'].notna()]
+    if not data['temporal id'].dtype in [np.int64]:
+        raise Exception('Error: invalid type for \'temporal id\' column in dataframe. expected type is int64.')
+    if data['temporal id'].isnull().values.any():
+        print('Warning: there are some NaN values in the temporal id column. those rows will be removed from dataframe.')
+        data = data[data['temporal id'].notna()]
         if len(data) == 0:
-            raise Exception('dataframe got zero len after removing NaN rows from temporal ID.')
+            raise Exception('dataframe got zero len after removing NaN rows from temporal id.')
     return data
 
 
 
 def check_spatial_id(data):
     import numpy as np
-    if data['spatial ID'].isnull().values.any():
-        print('Warning: there are some NaN values in the spatial ID column. those rows will be removed from dataframe.')
-        data = data[data['spatial ID'].notna()]
+    if data['spatial id'].isnull().values.any():
+        print('Warning: there are some NaN values in the spatial id column. those rows will be removed from dataframe.')
+        data = data[data['spatial id'].notna()]
         if len(data) == 0:
-            raise Exception('dataframe got zero len after removing NaN rows from spatial ID.')
+            raise Exception('dataframe got zero len after removing NaN rows from spatial id.')
     return data
 
 
@@ -126,9 +126,9 @@ def check_data_columns(data,list_of_columns):
             data = check_latitude(data)
         if column == 'depth':
             data = check_depth(data)
-        if column == 'temporal ID':
+        if column == 'temporal id':
             data = check_temporal_id(data)
-        if column == 'spatial ID':
+        if column == 'spatial id':
             data = check_spatial_id(data)
         if column == 'target':
             data = check_target(data)
@@ -196,24 +196,24 @@ def input_checking_modify_target(data,target_mode,class_boundaries,column_identi
                 raise Exception(f'Error: there is no column named {column_name} in \'data\' columns.')
             # renaming in data:
             data = data.rename(columns={column_identifier['target']:'target'})
-        if not ('temporal ID' in data.columns):
+        if not ('temporal id' in data.columns):
             # key checking:
-            if not ('temporal ID' in column_identifier.keys()):
-                raise Exception('Error: \'temporal ID\' key not found in \'column_identifier\' keys.')
+            if not ('temporal id' in column_identifier.keys()):
+                raise Exception('Error: \'temporal id\' key not found in \'column_identifier\' keys.')
             # column checking:
-            if not (column_identifier['temporal ID'] in data.columns):
-                column_name = column_identifier['temporal ID']
+            if not (column_identifier['temporal id'] in data.columns):
+                column_name = column_identifier['temporal id']
                 raise Exception(f'Error: there is no column named {column_name} in \'data\' columns.')
             # renaming in data:
-            data = data.rename(columns={column_identifier['temporal ID']:'temporal ID'})
+            data = data.rename(columns={column_identifier['temporal id']:'temporal id'})
     else:
-        if not (('target' in data.columns) and ('temporal ID' in data.columns)):
-            raise TypeError('Error: there are no such columns \'target\' or \'temporal ID\' in \'data\' columns.(data must contain both' + \
+        if not (('target' in data.columns) and ('temporal id' in data.columns)):
+            raise TypeError('Error: there are no such columns \'target\' or \'temporal id\' in \'data\' columns.(data must contain both' + \
             ' these columns.)')
-    # checking 'target' & 'temporal ID' columns.
-    check_data_columns(data,['target','temporal ID'])
-    # sorting based on temporal ID.
-    data = data.sort_values(by='temporal ID')
+    # checking 'target' & 'temporal id' columns.
+    check_data_columns(data,['target','temporal id'])
+    # sorting based on temporal id.
+    data = data.sort_values(by='temporal id')
     return data
 
 
@@ -255,16 +255,16 @@ def modify_target(data,class_boundaries=None,target_mode=None,column_identifier=
         ######################################################################### normal
         if target_mode is None:
             data['Target (normal)'] = data['target']
-            data = data.rename(columns={'target':'Normal target'})   
+            data = data.rename(columns={'target':'Normal target'})
             return data
         ######################################################################### cumulative
         if target_mode == 'cumulative':
-            data['Target (cumulative)'] = data.groupby('spatial ID')['target'].apply(cumulative)
+            data['Target (cumulative)'] = data.groupby('spatial id')['target'].apply(cumulative)
             data = data.rename(columns={'target':'Normal target'})
             return data
         ######################################################################### differential
         elif target_mode == 'differential': # make target differential
-            data['Target (differential)'] = data.groupby('spatial ID')['target'].apply(differential)
+            data['Target (differential)'] = data.groupby('spatial id')['target'].apply(differential)
             data = data.rename(columns={'target':'Normal target'})
         ######################################################################### classify
         elif target_mode == 'classify': # make target classified
@@ -274,6 +274,6 @@ def modify_target(data,class_boundaries=None,target_mode=None,column_identifier=
         ######################################################################### moving average
         elif target_mode.startswith('moving average'):
             window_size = int(target_mode[len('moving average '):])
-            data['Target (moving average)'] = data.groupby('spatial ID')['target'].apply(moving_average,window_size=window_size)
+            data['Target (moving average)'] = data.groupby('spatial id')['target'].apply(moving_average,window_size=window_size)
             data = data.rename(columns={'target':'Normal target'})  
         return data

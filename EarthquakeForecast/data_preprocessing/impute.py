@@ -1,6 +1,9 @@
 import warnings
 
-from EarthquakeForecast.data_preprocessing.configurations import IMPUTE_STRATEGIES
+# from EarthquakeForecast.data_preprocessing.configurations import IMPUTE_STRATEGIES
+# the above line is commented because we have not indexed the package in pypi instead we put the below lines:
+# comment if you want to index the package
+IMPUTE_STRATEGIES = ["KNN", "mean", "median", "min", "max", "most_frequent"]
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -29,39 +32,31 @@ def rename_columns(data, column_identifier):
                     if i not in data:
                         raise ValueError("{} does not exist in data columns.\n".format(i))
 
-            if key == "temporal ID":
-                continue
-            elif key == "spatial ID":
-                continue
-            elif key == "target":
-                continue
-            elif key == "temporal covariates":
-                continue
-            elif key == "spatial covariates":
+            if key in ["temporal id","spatial id","target","temporal covariates","spatial covariates"]:
                 continue
             data.rename(columns={value: key}, inplace=True)
 
-        if "temporal ID" not in data:
-            if "temporal ID" in list(column_identifier.keys()):
-                data.rename(columns={column_identifier["temporal ID"]: "temporal ID"}, inplace=True)
+        if "temporal id" not in data:
+            if "temporal id" in list(column_identifier.keys()):
+                data.rename(columns={column_identifier["temporal id"]: "temporal id"}, inplace=True)
 
-        elif "temporal ID" in list(column_identifier.keys()):
+        elif "temporal id" in list(column_identifier.keys()):
             print(
-                "Warning: temporal ID is defined in both data columns and colum_identifier. data columns have higher "
-                "priority than column_identifier, so temporal ID has been removed from column_identifier.\n")
-            column_identifier.pop("temporal ID")
+                "Warning: temporal id is defined in both data columns and colum_identifier. data columns have higher "
+                "priority than column_identifier, so temporal id has been removed from column_identifier.\n")
+            column_identifier.pop("temporal id")
 
-        if "spatial ID" not in data:
-            if "spatial ID" in list(column_identifier.keys()):
-                if column_identifier["spatial ID"] not in data:
-                    raise ValueError("temporal ID and spatial ID should be unique columns.")
-                data.rename(columns={column_identifier["spatial ID"]: "spatial ID"}, inplace=True)
+        if "spatial id" not in data:
+            if "spatial id" in list(column_identifier.keys()):
+                if column_identifier["spatial id"] not in data:
+                    raise ValueError("temporal id and spatial id should be unique columns.")
+                data.rename(columns={column_identifier["spatial id"]: "spatial id"}, inplace=True)
         else:
-            if "spatial ID" in list(column_identifier.keys()):
+            if "spatial id" in list(column_identifier.keys()):
                 print(
-                    "Warning: spatial ID is defined in both data columns and colum_identifier. data columns have "
-                    "higher priority than column_identifier, so spatial ID has been removed from column_identifier.\n")
-                column_identifier.pop("spatial ID")
+                    "Warning: spatial id is defined in both data columns and colum_identifier. data columns have "
+                    "higher priority than column_identifier, so spatial id has been removed from column_identifier.\n")
+                column_identifier.pop("spatial id")
 
         if "target" in data:
             if "target" in list(column_identifier.keys()):
@@ -113,7 +108,7 @@ def K_impute(row, df, k, impute_strategy):
             list_of_neighbors_value.clear()
 
 
-def impute(data, column_identifier=None, missing_value=np.nan, fill_missing_target=0, K=None, impute_strategy="KNN"):
+def impute(data, column_identifier=None, missing_value=np.nan, fill_missing_target=np.nan, K=None, impute_strategy="KNN"):
     """
      Impute the dataset if it contains missing values.
      Most of the time these missing values are encoded as blanks, NaNs or other placeholders.
@@ -131,7 +126,8 @@ def impute(data, column_identifier=None, missing_value=np.nan, fill_missing_targ
         raise ValueError("The input data is empty.\n")
 
     # rename column of data using column identifier
-    data = rename_columns(data.copy(), column_identifier)
+
+    data = rename_columns(data.copy(), column_identifier.copy())
 
     # impute strategy:
     if type(impute_strategy) not in [str, float, int]:
@@ -159,16 +155,16 @@ def impute(data, column_identifier=None, missing_value=np.nan, fill_missing_targ
     # approach)
     id_df = pd.DataFrame()
     target_df = pd.DataFrame()
-    if "temporal ID" in data:
-        id_df["temporal ID"] = data["temporal ID"]
-        data.drop("temporal ID", axis=1, inplace=True)
+    if "temporal id" in data:
+        id_df["temporal id"] = data["temporal id"].copy()
+        data.drop("temporal id", axis=1, inplace=True)
 
-    if "spatial ID" in data:
-        id_df["spatial ID"] = data["spatial ID"]
-        data.drop("spatial ID", axis=1, inplace=True)
+    if "spatial id" in data:
+        id_df["spatial id"] = data["spatial id"].copy()
+        data.drop("spatial id", axis=1, inplace=True)
 
     if "target" in data:
-        target_df = data["target"]
+        target_df = data["target"].copy()
         data.drop("target", axis=1, inplace=True)
 
     # check if all data are numeric

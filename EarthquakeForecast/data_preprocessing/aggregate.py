@@ -6,7 +6,9 @@ import pandas as pd
 import numpy as np
 import functools as ft
 
-import configurations
+# Temporary commnet the below line because we are not testing in real indexed package.
+# import configurations
+from data_preprocessing import configurations
 
 '''
 If two or more samples have the same spatial id and temporal id, this function aggregates them.
@@ -17,9 +19,9 @@ If two or more samples have the same spatial id and temporal id, this function a
 def rename_columns(data, column_identifier):
     if type(column_identifier) == dict:
         for key, value in column_identifier.items():
-            if key == "temporal ID":
+            if key == "temporal id":
                 continue
-            elif key == "spatial ID":
+            elif key == "spatial id":
                 continue
             elif key == "target":
                 continue
@@ -29,17 +31,17 @@ def rename_columns(data, column_identifier):
                 continue
             data.rename(columns={value: key}, inplace=True)
 
-        if "temporal ID" not in data:
-            if "temporal ID" not in list(column_identifier.keys()):
-                raise ValueError("temporal ID is not specified in column_identifier.")
+        if "temporal id" not in data:
+            if "temporal id" not in list(column_identifier.keys()):
+                raise ValueError("temporal id is not specified in column_identifier.")
             else:
-                data.rename(columns={column_identifier["temporal ID"]: "temporal ID"}, inplace=True)
+                data.rename(columns={column_identifier["temporal id"]: "temporal id"}, inplace=True)
 
-        if "spatial ID" not in data:
-            if "spatial ID" not in list(column_identifier.keys()):
-                raise ValueError("spatial ID is not specified in column_identifier.")
+        if "spatial id" not in data:
+            if "spatial id" not in list(column_identifier.keys()):
+                raise ValueError("spatial id is not specified in column_identifier.")
             else:
-                data.rename(columns={column_identifier["spatial ID"]: "spatial ID"}, inplace=True)
+                data.rename(columns={column_identifier["spatial id"]: "spatial id"}, inplace=True)
 
         if "target" not in data:
             if "target" not in list(column_identifier.keys()):
@@ -77,11 +79,12 @@ def aggregate(data, column_identifier, aggregation_mode="mean", base=None, verbo
         raise ValueError("The input data is empty.\n")
 
     # rename columns of data using column identifier
+    column_identifier = column_identifier.copy()
     data = rename_columns(data.copy(), column_identifier)
-    if "temporal ID" not in data:
-        raise ValueError("temporal ID is not specified in data.\n")
-    if "spatial ID" not in data:
-        raise ValueError("spatial ID is not specified in data.\n")
+    if "temporal id" not in data:
+        raise ValueError("temporal id is not specified in data.\n")
+    if "spatial id" not in data:
+        raise ValueError("spatial id is not specified in data.\n")
 
     # check validity of column identifier
     if column_identifier is None:
@@ -97,12 +100,12 @@ def aggregate(data, column_identifier, aggregation_mode="mean", base=None, verbo
         if type(column_identifier["spatial covariates"]) != list:
             raise TypeError("spatial covariates should be specified in column identifier in a list.\n")
         for spatial_covar in column_identifier["spatial covariates"]:
-            grouped_data = data.groupby("spatial ID")
+            grouped_data = data.groupby("spatial id")
             for name_of_group, contents_of_group in grouped_data:
                 spatial_covar_list_in_group = contents_of_group[spatial_covar].tolist()
                 if not (spatial_covar_list_in_group.count(spatial_covar_list_in_group[0]) == len(
                         spatial_covar_list_in_group)):
-                    raise ValueError("contents of spatial covariates, should not change in different temporal IDs")
+                    raise ValueError("contents of spatial covariates, should not change in different temporal ids")
     # check if data contains any types other than int or float
     int_or_float_data = data.select_dtypes(include=['float64', 'int64'])
     if not int_or_float_data.equals(data):
@@ -148,10 +151,10 @@ def aggregate(data, column_identifier, aggregation_mode="mean", base=None, verbo
         raise TypeError("The aggregation_mode must be of type str or dict.\n")
 
     # sort data
-    data.sort_values(by=['temporal ID', 'spatial ID'], ascending=True, ignore_index=True, inplace=True)
+    data.sort_values(by=['temporal id', 'spatial id'], ascending=True, ignore_index=True, inplace=True)
 
     # list of each aggregation_mode in case of dict:
-    covariate_names = list(filter(lambda x: not x.startswith(('temporal ID', 'spatial ID')), data.columns))
+    covariate_names = list(filter(lambda x: not x.startswith(('temporal id', 'spatial id')), data.columns))
     if "spatial covariates" in column_identifier:
         spatial_covariates = [spatial_covar for spatial_covar in column_identifier["spatial covariates"]]
     else:
@@ -198,60 +201,60 @@ def aggregate(data, column_identifier, aggregation_mode="mean", base=None, verbo
 
         # aggregation mode = mean in dict
         if len(mean_covariates) > 0:
-            mean_covariates += ["temporal ID", "spatial ID"]
+            mean_covariates += ["temporal id", "spatial id"]
             mean_covariates = list(dict.fromkeys(mean_covariates))
             mean_data = data.copy()[mean_covariates]
-            mean_data = mean_data.groupby(["temporal ID", "spatial ID"]).mean().reset_index()
+            mean_data = mean_data.groupby(["temporal id", "spatial id"]).mean().reset_index()
 
         # aggregation mode = max in dict
         if len(max_covariates) > 0:
-            max_covariates += ["temporal ID", "spatial ID"]
+            max_covariates += ["temporal id", "spatial id"]
             max_data = data.copy()[max_covariates]
-            max_data = max_data.groupby(["temporal ID", "spatial ID"]).max().reset_index()
+            max_data = max_data.groupby(["temporal id", "spatial id"]).max().reset_index()
 
         # aggregation_mode = min in dict
         if len(min_covariates) > 0:
-            min_covariates += ["temporal ID", "spatial ID"]
+            min_covariates += ["temporal id", "spatial id"]
             min_data = data.copy()[min_covariates]
-            min_data = min_data.groupby(["temporal ID", "spatial ID"]).min().reset_index()
+            min_data = min_data.groupby(["temporal id", "spatial id"]).min().reset_index()
 
         # aggregation_mode = std in dict
         if len(std_covariates) > 0:
-            std_covariates += ["temporal ID", "spatial ID"]
+            std_covariates += ["temporal id", "spatial id"]
             std_data = data.copy()[std_covariates]
-            std_data = (std_data.groupby(["temporal ID", "spatial ID"]).std().fillna(
-                data.groupby(['temporal ID', 'spatial ID']).last())).reset_index()
+            std_data = (std_data.groupby(["temporal id", "spatial id"]).std().fillna(
+                data.groupby(['temporal id', 'spatial id']).last())).reset_index()
 
         # aggregation mode = sum in dict
         if len(sum_covariates) > 0:
-            sum_covariates += ["temporal ID", "spatial ID"]
+            sum_covariates += ["temporal id", "spatial id"]
             sum_data = data.copy()[sum_covariates]
-            sum_data = sum_data.groupby(["temporal ID", "spatial ID"]).sum().reset_index()
+            sum_data = sum_data.groupby(["temporal id", "spatial id"]).sum().reset_index()
 
         # aggregation mode = mode in dict
         if len(mode_covariates) > 0:
-            mode_covariates += ["temporal ID", "spatial ID"]
+            mode_covariates += ["temporal id", "spatial id"]
             mode_data = data.copy()[sum_covariates]
-            mode_data = mode_data.groupby(['temporal ID', 'spatial ID']).agg(lambda x: pd.Series.mode(x)[0])
+            mode_data = mode_data.groupby(['temporal id', 'spatial id']).agg(lambda x: pd.Series.mode(x)[0])
 
         datas = [mean_data, max_data, min_data, sum_data, mode_data, std_data]
         dataframes = []
         for x in datas:
             if len(x) > 0:
                 dataframes.append(x)
-        data = ft.reduce(lambda left, right: pd.merge(left, right, on=["temporal ID", "spatial ID"]), dataframes)
+        data = ft.reduce(lambda left, right: pd.merge(left, right, on=["temporal id", "spatial id"]), dataframes)
 
     # aggregation_mode is mean
     if aggregation_mode == "mean":
-        data = data.groupby(["temporal ID", "spatial ID"]).mean().reset_index()
+        data = data.groupby(["temporal id", "spatial id"]).mean().reset_index()
 
     # aggregation_mode is max
     if aggregation_mode == "max":
-        data = data.groupby(["temporal ID", "spatial ID"]).max().reset_index()
+        data = data.groupby(["temporal id", "spatial id"]).max().reset_index()
 
     # aggregation_mode is min
     if aggregation_mode == "min":
-        data = data.groupby(["temporal ID", "spatial ID"]).min().reset_index()
+        data = data.groupby(["temporal id", "spatial id"]).min().reset_index()
 
     # aggregation_mode is std
     if aggregation_mode == "std":
@@ -260,21 +263,21 @@ def aggregate(data, column_identifier, aggregation_mode="mean", base=None, verbo
                 "Warning: std aggregation mode is not available for spatial covariates. Spatial covariates remain "
                 "constant during aggregation and mean as default method applies for them.\n")
             spa_cov_list = [x for x in spatial_covariates if (x in data.columns)]
-            spa_cov_list += ["temporal ID", "spatial ID"]
+            spa_cov_list += ["temporal id", "spatial id"]
             mean_data = data[spa_cov_list].copy()
-            mean_data = mean_data.groupby(["temporal ID", "spatial ID"]).mean().reset_index()
+            mean_data = mean_data.groupby(["temporal id", "spatial id"]).mean().reset_index()
 
             std_data_list = [x for x in data.columns if not (x in spatial_covariates)]
             std_data = data[std_data_list].copy()
-            std_data = (std_data.groupby(["temporal ID", "spatial ID"]).std().fillna(
-                data.groupby(['temporal ID', 'spatial ID']).last())).reset_index()
+            std_data = (std_data.groupby(["temporal id", "spatial id"]).std().fillna(
+                data.groupby(['temporal id', 'spatial id']).last())).reset_index()
 
             dataframes = [mean_data, std_data]
-            data = ft.reduce(lambda left, right: pd.merge(left, right, on=["temporal ID", "spatial ID"]), dataframes)
+            data = ft.reduce(lambda left, right: pd.merge(left, right, on=["temporal id", "spatial id"]), dataframes)
 
         else:
-            data = (data.groupby(['temporal ID', 'spatial ID']).std().fillna(
-                data.groupby(['temporal ID', 'spatial ID']).last())).reset_index()
+            data = (data.groupby(['temporal id', 'spatial id']).std().fillna(
+                data.groupby(['temporal id', 'spatial id']).last())).reset_index()
 
     # aggregation_mode is sum
     if aggregation_mode == "sum":
@@ -283,27 +286,27 @@ def aggregate(data, column_identifier, aggregation_mode="mean", base=None, verbo
                 "Warning: Sum aggregation mode is not available for spatial covariates. Spatial covariates remain "
                 "constant during aggregation and mean as default method applies for them.\n")
             spa_cov_list = [x for x in spatial_covariates if (x in data.columns)]
-            spa_cov_list += ["temporal ID", "spatial ID"]
+            spa_cov_list += ["temporal id", "spatial id"]
             mean_data = data[spa_cov_list].copy()
-            mean_data = mean_data.groupby(["temporal ID", "spatial ID"]).mean().reset_index()
+            mean_data = mean_data.groupby(["temporal id", "spatial id"]).mean().reset_index()
 
             sum_data_list = [x for x in data.columns if not (x in spatial_covariates)]
             sum_data = data[sum_data_list].copy()
-            sum_data = sum_data.groupby(["temporal ID", "spatial ID"]).sum().reset_index()
+            sum_data = sum_data.groupby(["temporal id", "spatial id"]).sum().reset_index()
 
             dataframes = [mean_data, sum_data]
-            data = ft.reduce(lambda left, right: pd.merge(left, right, on=["temporal ID", "spatial ID"]), dataframes)
+            data = ft.reduce(lambda left, right: pd.merge(left, right, on=["temporal id", "spatial id"]), dataframes)
 
         else:
-            data = data.groupby(["temporal ID", "spatial ID"]).sum().reset_index()
+            data = data.groupby(["temporal id", "spatial id"]).sum().reset_index()
 
     # aggregation_mode is base_max
     if aggregation_mode == "base_max":
-        data = data.sort_values(base, ascending=False).drop_duplicates(['temporal ID', 'spatial ID'])
-        data.sort_values(by=['temporal ID', 'spatial ID'], ascending=True, ignore_index=True, inplace=True)
+        data = data.sort_values(base, ascending=False).drop_duplicates(['temporal id', 'spatial id'])
+        data.sort_values(by=['temporal id', 'spatial id'], ascending=True, ignore_index=True, inplace=True)
 
     # aggregation_mode is mode
     if aggregation_mode == "mode":
-        data = data.groupby(['temporal ID', 'spatial ID']).agg(lambda x: pd.Series.mode(x)[0])
-        data = data.reset_index(level=['temporal ID', 'spatial ID'])
+        data = data.groupby(['temporal id', 'spatial id']).agg(lambda x: pd.Series.mode(x)[0])
+        data = data.reset_index(level=['temporal id', 'spatial id'])
     return data
