@@ -49,13 +49,3 @@
 | **example:** If the unit is 'day' and the step is 5,
 | the difference between two consecutive IDs will be
 | greater than or equal to 5 days."
-"| 5
-| ","| verbose
-| ","| **type:** int
-| **default:** 0
-| **details:** The level of details in produced logging information
-| available options:
-| 0: no logging
-| 1: only important information logging
-| 2: all details logging
-|"

@@ -3,7 +3,7 @@ impute
 
 **Description**
 
-Impute the missing values of each covariate of the input data, using different approaches such as KNN, mean, median, most_frequent, min, max. For each of these methods, it is provided to choose K for the size of the window in which this method is applied.
+The impute function is a versatile tool within the EarthquakeForecast package that addresses missing values in covariates of input data. By employing various imputation approaches such as KNN, mean, median, most frequent, minimum, and maximum, this function systematically fills in missing values for each covariate. Users can customize the imputation process by selecting the desired method and, in the case of KNN imputation, specifying the number of nearest neighbors (K) for imputing missing values.
 
 **Usage**
 

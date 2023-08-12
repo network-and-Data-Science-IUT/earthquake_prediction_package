@@ -3,10 +3,7 @@ set_temporal_id
 
 **Description**
 
-Label a group of samples with the same temporal ID 
-according to the desired temporal unit and step. 
-Temporal ID identifies which time period a sample belongs to.
-
+The set_temporal_id function within the EarthquakeForecast package allows users to assign temporal identifiers to groups of samples based on desired time units and steps. These temporal IDs help label and categorize samples according to their specific time intervals.
 
 **Usage**
 

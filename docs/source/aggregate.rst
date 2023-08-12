@@ -3,7 +3,7 @@ aggregate
 
 **Description**
 
-If two or more samples have the same spatial id and temporal id, this function aggregates them.
+The aggregate function in the EarthquakeForecast package provides a method for consolidating and summarizing data when multiple samples share the same spatial and temporal identifiers. This function streamlines the aggregation process, allowing users to choose from various aggregation modes to combine values within these shared identifiers.
 
 **Usage**
 

@@ -3,8 +3,7 @@ modify_target
 
 **Description**
 
-This function modifies the target variable based on 
-the selected target_mode.
+The modify_target function within the EarthquakeForecast package offers a way to alter the target variable based on various specified target modes. This modification is significant for preparing the target variable for prediction and modeling processes.
 
 **Usage**
 

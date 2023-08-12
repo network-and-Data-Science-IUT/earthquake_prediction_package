@@ -3,10 +3,7 @@ set_spatial_id
 
 **Description**
 
-This function will divide the region of interest
-into some pixels or clusters
-and set a spatial ID for each of them 
-based on the longitude, latitude and depth.
+The set_spatial_id function within the EarthquakeForecast package facilitates the creation of spatial identifiers for distinct regions within a given region of interest. This function operates by dividing the area into pixels or clusters and assigning spatial IDs based on the provided longitude, latitude, and depth information.
 
 There are two ways to set spatial ID:
 1. pixelating.
