@@ -1,0 +1,7 @@
+#,Output Name,Output Description
+"| 1
+| ","| historical_data 
+| ","| **type:** DataFrame
+| **details:** data with historical features for time series forecasting.
+| It includes past values of covariates, aggregated spatial features,
+| and future target values."

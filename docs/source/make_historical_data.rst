@@ -17,7 +17,7 @@ The target of the final data frame is the values of the target variable at the t
 
 **Usage**
 
-.. py:function:: data_preprocessing.make_historical_data(data, layer_number, aggregate_layers, neighboring_covariates, history_for_layers, aggregation_modes, neighbours_dictionary, forecast_horizon, history_length, verbose=0)
+.. py:function:: data_preprocessing.make_historical_data(data, column_identifier, forecast_horizon, history_length=1, layer_number=1, aggregate_layer=True, neighboring_covariates=None, neighbors_dictionary=None, aggregation_mode="mean")
 
 **Parameters**
 

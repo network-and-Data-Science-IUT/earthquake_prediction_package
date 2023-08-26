@@ -6,35 +6,70 @@
 | **details:**
 | DataFrame containing spatial & temporal IDs and covariates."
 "| 2
+| ","| column_identifier
+| ","| **type:** DataFrame
+| **default:** -
+| **details:**
+| Column identifier directs data roles, like temporal and spatial covariates,
+| and the target variable. 
+| If the column names in the dataframe are not as expected, they can be 
+| explicitly specified."
+"| 3
+| ","| forecast_horizon
+| ","| **type:** int
+| **default:** -
+| **details:**
+| Shows how far into the future shift the target variable values
+| when creating historical features. It determines the time steps ahead 
+| for which predictions are being prepared."
+"| 4
+| ","| history_length
+| ","| **type:** int
+| **default:** 1
+| **details:**
+| Determines how many past time steps are considered when creating
+| historical features for each covariate."
+"| 5
 | ","| layer_number
 | ","| **type:** int
-| **default:** 0
+| **default:** 1
 | **details:**
-| If layer_number = 0 then no covariate will be added as feature(s).
-| If layer_number = k > 0 then the feature list consists
-| of covariates of 1-layer, 2-layer, ..., and k-layer pixel(s).
-| Finding neighbours is like “breadth first search” algorithm
-| as the number of layers increases we deepen our search to deeper layers.
-| Note: if the “maximum_layer_number” was more than the maximum
-| it can be we consider the maximum value instead.
-| if the maximum history length of each covariate is
-| specified in a dictionary with the covariate names as it’s
-| keys and the corresponding maximum layer number as it’s values, the
-| function will produce a dataframe for each combination of covariates’
-| layer numbers."
-"| 3
-| ","| aggregate_layers
-| ","| **type:** Boolean
+| Specifies the depth or distance of neighboring nodes considered
+| when creating spatial historical features based on spatial IDs."
+"| 6
+| ","| aggregate_layer
+| ","| **type:** boolean
 | **default:** True
 | **details:**
-| True case: We aggregate all layer levels with some formula (?)
-| False case: We add all layers covariates to feature list."
-"| 4
-| ","| verbose
-| ","| **type:** int
-| **default:** 0
+| Controls whether the spatial historical features should be aggregated
+| across different layers."
+"| 7
+| ","| neighboring_covariates
+| ","| **type:** list 
+| **default:** None
 | **details:**
-| the level of produced detailed logging information.
-| 0: no logging.
-| 1: only important information logging.
-| 2: all details logging."
+| Lists the covariates used for calculating spatial historical features
+| based on neighboring nodes."
+"| 8
+| ","| neighbors_dictionary
+| ","| **type:** dict 
+| **default:** None
+| **details:**
+| Maps spatial IDs to lists of their neighboring spatial IDs, used for 
+| spatial historical feature calculation."
+"| 9
+| ","| aggregation_mode
+| ","| **type:** string
+| **default:** ‘mean’
+| **details:**
+| Determines the method used to combine values from neighboring nodes
+| when calculating spatial historical features.
+| **Options:**
+| The aggregation_mode can typically include the following options:
+|
+| ‘mean’: Calculate the average value of neighboring nodes' features.
+| ‘max’: Use the maximum value among neighboring nodes' features.
+| ‘min’: Use the minimum value among neighboring nodes' features.
+| ‘sum’: Add up the values of neighboring nodes' features.
+| ‘std’: Compute the standard deviation of neighboring nodes' features."
+
